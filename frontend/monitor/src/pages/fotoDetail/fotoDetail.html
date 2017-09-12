@@ -1,0 +1,16 @@
+<ion-header>
+  <ion-navbar>
+    <ion-title>Detalhes da Foto</ion-title>
+  </ion-navbar>
+</ion-header>
+
+<ion-content>
+  <ion-card>
+      <img [src]="imagem ? imagem.foto : null" />
+      <ion-item>
+        <ion-icon name="time" item-start large></ion-icon>
+        <h2>Data e Hora</h2>
+        <p>{{imagem.data}}</p>
+      </ion-item>
+  </ion-card>
+</ion-content>

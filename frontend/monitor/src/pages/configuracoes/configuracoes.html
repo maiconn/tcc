@@ -1,0 +1,24 @@
+<ion-header>
+  <ion-navbar>
+    <ion-title>Configurações</ion-title>
+    <ion-buttons end>
+      <button ion-button icon-only (click)="salvar()">
+        <ion-icon name="checkmark"></ion-icon>
+      </button>
+    </ion-buttons>
+  </ion-navbar>
+</ion-header>
+
+<ion-content>
+  <ion-card>
+    <ion-card-header>
+      <ion-icon name="cloud"></ion-icon> Servidor
+    </ion-card-header>
+    <ion-list>
+      <ion-item>
+        <ion-label stacked>Endpoint</ion-label>
+        <ion-input type="text" [(ngModel)]="configuracoes.endpoint" placeholder="Endpoint"></ion-input>
+      </ion-item>
+    </ion-list>
+  </ion-card>
+</ion-content>

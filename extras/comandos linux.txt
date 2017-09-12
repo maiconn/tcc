@@ -1,0 +1,49 @@
+hcitool scan
+hcitool dev -- ver devices
+
+https://www.cnet.com/how-to/how-to-setup-bluetooth-on-a-raspberry-pi-3/
+sudo bluetoothctl 
+
+
+https://www.k-team.com/forum/index.php?topic=238.0
+sdptool browse 40:88:05:5E:04:74
+sudo rfcomm bind 0 40:88:05:5E:04:74
+sudo rfcomm bind /dev/rfcomm1 40:88:05:5E:04:74 1
+
+sdptool add --channel=3 SP
+----------
+sdptool browse 40:88:05:5E:04:74
+sudo rfcomm release 0
+sudo rfcomm bind 0 40:88:05:5E:04:74 <PORTA>
+
+
+sdptool browse 00:1D:A5:00:00:14
+sudo rfcomm bind 0 00:1D:A5:00:00:14 1
+
+
+python sdp-browse.py BT_MAC_ADDRESS_OF_DEVICE
+
+sudo rfcomm watch hci0
+
+
+vi [arquivo]
+i - editar
+:q! sair sem salvar
+:wq sair e salvar
+
+dbus-send --system --type=method_call --print-reply --dest=org.bluez /org/bluez/hci0 org.bluez.Adapter.GetProperties
+
+
+https://www.raspberrypi.org/documentation/usage/camera/
+-- FOTO
+raspistill -o cam.jpg
+
+-- VIDEO
+raspivid -o vid.h264
+MP4Box -add video.h264 video.mp4
+
+https://github.com/matthewcodes/OBDSim/
+
+GPS:
+sudo gpsd /dev/serial0 -F /var/run/gpsd.sock
+sudo cgps -s

@@ -1,0 +1,25 @@
+<ion-header>
+    <ion-navbar>
+      <ion-title>Detalhes da Localização</ion-title>
+    </ion-navbar>
+  </ion-header>
+  
+  <ion-content>
+    <ion-card>
+        <agm-map [latitude]="localizacao.coords.lat" [longitude]="localizacao.coords.longit" [zoom]="17" >
+          <agm-marker [latitude]="localizacao.coords.lat" [longitude]="localizacao.coords.longit"></agm-marker>
+        </agm-map>
+        <ion-item>
+          <ion-icon name="pin" item-start large></ion-icon>
+          <h2>Localização</h2>
+          <p><b>Lat: </b>{{localizacao.coords.lat}}</p>
+          <p><b>Lon: </b>{{localizacao.coords.longit}}</p>
+        </ion-item>
+        <ion-item>
+          <ion-icon name="time" item-start large></ion-icon>
+          <h2>Data e Hora</h2>
+          <p>{{localizacao.data}}</p>
+        </ion-item>
+    </ion-card>
+  </ion-content>
+  

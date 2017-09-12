@@ -1,0 +1,21 @@
+<ion-header>
+  <ion-navbar>
+    <ion-title>Fotos</ion-title>
+    <ion-buttons end>
+      <button ion-button icon-only (click)="nova()">
+        <ion-icon name="camera"></ion-icon>
+      </button>
+    </ion-buttons>
+  </ion-navbar>
+</ion-header>
+
+<ion-content>
+    <ion-list inset>
+      <button ion-item *ngFor="let foto of fotos" (click)="itemSelected(foto)">
+        <img src="{{foto.foto}}" width="40" height="40" item-start/>{{foto.data}}
+      </button> 
+      <ion-item *ngIf="fotos ? fotos.length == 0 : true"> 
+        Sem fotos no dispositivo
+      </ion-item>
+    </ion-list>
+</ion-content>

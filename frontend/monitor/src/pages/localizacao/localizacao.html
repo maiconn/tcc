@@ -1,0 +1,23 @@
+<ion-header>
+  <ion-navbar>
+    <ion-title>Localização</ion-title>
+    <ion-buttons end>
+      <button ion-button icon-only (click)="nova()">
+        <ion-icon name="add"></ion-icon>
+      </button>
+    </ion-buttons>
+  </ion-navbar>
+</ion-header>
+
+<ion-content>
+    <ion-list inset>
+      <button ion-item *ngFor="let localizacao of localizacoes" (click)="itemSelected(localizacao)">
+        <ion-icon name="pin" item-start large></ion-icon> 
+        <h2>{{localizacao.coords.lat}} <br> {{localizacao.coords.longit}}</h2>
+        <ion-icon name="time"></ion-icon>{{localizacao.data}}
+      </button> 
+      <ion-item *ngIf="localizacoes ? localizacoes.length == 0 : true"> 
+        Nenhuma localização no dispositivo
+      </ion-item>
+    </ion-list>
+</ion-content>
