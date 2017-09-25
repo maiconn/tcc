@@ -14,7 +14,8 @@ sdptool add --channel=3 SP
 ----------
 sdptool browse 40:88:05:5E:04:74
 sudo rfcomm release 0
-sudo rfcomm bind 0 40:88:05:5E:04:74 <PORTA>
+sudo rfcomm bind 0 40:88:05:5E:04:74 10
+
 
 
 sdptool browse 00:1D:A5:00:00:14
