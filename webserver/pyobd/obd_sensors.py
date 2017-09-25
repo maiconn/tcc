@@ -73,6 +73,8 @@ def fuel_trim_percent(code):
     return (code - 128) * 100 / 128
 
 def dtc_decrypt(code):
+
+    print('dtc_decrypt: code=' + code)
     #first byte is byte after PID and without spaces
     num = hex_to_int(code[:2]) #A byte
     res = []

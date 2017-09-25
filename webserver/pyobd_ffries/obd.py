@@ -125,11 +125,15 @@ class OBD(object):
                     pid  = get.pid + i + 1
 
                     if commands.has_pid(mode, pid):
-                        self.supported_commands.add(commands[mode][pid])
+                        command = commands[mode][pid]
+                        self.supported_commands.add(command)
 
                     # set support for mode 2 commands
-                    if mode == 1 and commands.has_pid(2, pid):
-                        self.supported_commands.add(commands[2][pid])
+                    #if mode == 1 and commands.has_pid(2, pid):
+                    #    command = commands[2][pid]
+                    #   self.supported_commands.add(command)
+                    
+                    print(str(command))
 
         logger.info("finished querying with %d commands supported" % len(self.supported_commands))
 

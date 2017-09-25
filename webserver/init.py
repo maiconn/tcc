@@ -4,15 +4,15 @@ import picamera
 import base64
 import serial
 from coord import Coord
-from pyobd.obd_capture import OBD_Capture
 from datetime import datetime
 import time
 from flask_cors import CORS
+from pyobd_ffries import obd
 
 app = Flask(__name__)
 CORS(app)
 
-obd_capture = OBD_Capture
+connection = obd.OBD
 
 @app.route('/')
 def index():
@@ -68,33 +68,33 @@ def get_gps():
 
 @app.route('/get_obdii')
 def get_obdii():
-    global obd_capture
-    try:
-        if not obd_capture.is_connected():
-            connect_obdii()
-            return json.dumps(dict(error =  "sem conexao, tentando reconectar..."))
-    except Exception as se:
-        connect_obdii()
-        print('ERROR: ' + str(se))
-        return json.dumps(dict(error =  str(se)))
-    return json.dumps(obd_capture.capture())
+    global connection
+
+    listSensors = []
+    
+    for command in connection.get_supported_commands():
+        if command.command not in [ b"03", 
+                                    b"07", 
+                                    b"04", 
+                                    b"0100", 
+                                    b"0140", 
+                                    b"0120",
+                                    b"0100",
+                                    b"0600" ]: 
+            cmd = command
+            response = connection.query(cmd) 
+            listSensors.append(dict(sensor = str(cmd), valor = str(response)))
+
+    return json.dumps(listSensors)
 
 @app.route('/get_dtc')
 def get_dtc():
-    global obd_capture
-    return json.dumps(obd_capture.get_dtc())
+    global connection
+    cmd = obd.commands.GET_DTC
+    response = connection.query(cmd) 
+    return str(response)
 
-def connect_obdii():
-    global obd_capture
-    try:
-        obd_capture = OBD_Capture()
-        obd_capture.connect()
-        time.sleep(3)
-        obd_capture.map_supported_pids()
-        time.sleep(3)
-    except Exception as se:
-        print('OBDERROR: ' + str(se))
-
-if __name__ == '__main__':    
-    connect_obdii()
+if __name__ == '__main__':  
+    obd.logger.setLevel(obd.logging.DEBUG) 
+    connection = obd.OBD()
     app.run(debug=True, host='0.0.0.0')
