@@ -1,0 +1,1 @@
+{"celular": "+5547992929968", "email": "maicon.gerardi@gmail.com", "endpoint": "http://192.168.0.12:5000/", "notificarEmail": true, "notificarSMS": true}

@@ -87,6 +87,9 @@ class Status():
             if name: # filter out None/reserved tests
                 self.__dict__[name] = null_test
 
+    def __str__(self):
+        return "MIL: %s, DTC_count: %s, ignition_type: %s" % (str(self.MIL), str(self.DTC_count), str(self.ignition_type))
+
 
 class StatusTest():
     def __init__(self, name="", available=False, complete=False):

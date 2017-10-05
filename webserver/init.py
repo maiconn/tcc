@@ -1,22 +1,46 @@
-from flask import Flask
-from flask import json
-import picamera
-import base64
-import serial
+from flask import Flask, jsonify, request, json
+import picamera, base64, serial, time, io, os, pdb, sys, getopt
 from coord import Coord
+from monitor_dtc import MonitorDTC
 from datetime import datetime
-import time
 from flask_cors import CORS
 from pyobd_ffries import obd
+from utils import *
 
+connection = None
+    
 app = Flask(__name__)
 CORS(app)
 
-connection = obd.OBD
+def main(argv):
+    global connection
+
+    _debug = True
+    try:
+        opts, args = getopt.getopt(argv,"sd:d:",["simulador=","debug="])
+    except getopt.GetoptError:
+        print('init.py -s <simulador(0,1,2)> -d <debug(0,1)>')
+        sys.exit(2)
+    for opt, arg in opts:
+        if opt in ("-s", "--simulador"):
+            set_simulador(int(arg))
+        elif opt in ("-d", "--debug"):
+            _debug = int(arg) == 1
+    
+    
+    set_debug(_debug)
+    log('_simulador: '+ str(get_simulador()))
+    log('    _debug: '+ str(get_debug()))
+
+    _config_pastas()
+    _connect_obd()
+    MonitorDTC(30, connection, get_debug())
+    
+    app.run(debug=_debug, host='0.0.0.0')
 
 @app.route('/')
 def index():
-    return 'WebServer No Ar... =D'
+    return json.dumps(dict(status =  "OK"))
 
 @app.route('/get_foto')
 def get_foto():
@@ -31,7 +55,7 @@ def get_foto():
 def get_gps():
     port = serial.Serial("/dev/serial0", baudrate=9600, timeout=10.0)
     line = []
-    print("connected to: " + port.portstr)
+    log("connected to: " + port.portstr)
 
     count = 1
     while count < 15:
@@ -44,7 +68,7 @@ def get_gps():
 
         if rcv == '\n':
             line = "".join(line)       
-            print(line)
+            log(line)
             if line.find("GPGGA") != -1: 
                 retorno = line.split(',')
 
@@ -70,6 +94,10 @@ def get_gps():
 def get_obdii():
     global connection
 
+    if connection is None:
+        _connect_obd()
+        return json.dumps(dict(error =  "sem conexao, tentando reconectar..."))
+
     listSensors = []
     
     for command in connection.get_supported_commands():
@@ -80,7 +108,8 @@ def get_obdii():
                                     b"0140", 
                                     b"0120",
                                     b"0100",
-                                    b"0600" ]: 
+                                    b"0600",
+                                    b"0101" ]: 
             cmd = command
             response = connection.query(cmd) 
             listSensors.append(dict(sensor = str(cmd), valor = str(response)))
@@ -90,11 +119,52 @@ def get_obdii():
 @app.route('/get_dtc')
 def get_dtc():
     global connection
-    cmd = obd.commands.GET_DTC
-    response = connection.query(cmd) 
-    return str(response)
 
-if __name__ == '__main__':  
-    obd.logger.setLevel(obd.logging.DEBUG) 
-    connection = obd.OBD()
-    app.run(debug=True, host='0.0.0.0')
+    if connection is None:
+        _connect_obd()
+        return json.dumps(dict(error =  "sem conexao, tentando reconectar..."))
+
+    return json.dumps(get_status_dtc(connection).json_dump())
+
+@app.route('/save_configs', methods=['POST'])
+def save_configs():
+    try:
+        content = request.get_json()
+        with io.open('./database/configs.txt', 'w', encoding='utf-8') as f:
+            f.write(json.dumps(content, ensure_ascii=False))
+        return json.dumps(dict(status =  "OK"))
+    except Exception as ex:
+        return json.dumps(dict(error = str(ex)))
+
+@app.route('/get_configs', methods=['GET'])
+def configs():
+    configs = "{}"
+    try:
+        _configs = get_configs()
+        if _configs is not None:
+            configs = _configs
+    except IOError as ex:
+        if "No such file or directory" in str(ex):
+            configs = "{}"
+    
+    return configs
+
+def _connect_obd():
+    global connection
+    try:
+        if get_debug():
+            obd.logger.setLevel(obd.logging.DEBUG) 
+            connection = obd.OBD(baudrate=9600)
+            log("protocolo: " + connection.get_protocol_name())
+        else:
+            connection = obd.OBD()
+    except Exception as ex:
+        connection = None
+        log("OBDERROR: " + str(ex))  
+
+def _config_pastas():
+    if not os.path.exists("./database"):
+        os.mkdir("./database", 0777)
+
+if __name__ == '__main__':
+    main(sys.argv[1:])

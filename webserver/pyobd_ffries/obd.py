@@ -38,6 +38,9 @@ from .elm327 import ELM327
 from .commands import commands
 from .OBDResponse import OBDResponse
 from .utils import scan_serial, OBDStatus
+from .decoders import parse_dtc
+import pdb
+from binascii import hexlify, unhexlify
 
 logger = logging.getLogger(__name__)
 
@@ -278,6 +281,59 @@ class OBD(object):
 
         return True
 
+    ####minha função para recuperar os DTCs
+    """
+        SIMULADOR:
+                    0 = SEM SIMULADOR
+                    1 = OBDSIM
+                    2 = ECU Simulator PRO
+    """
+    def query_dtc(self, cmd=commands.GET_DTC, simulador=0):
+        # se for sem simulador
+        if simulador == 0:
+            return query(cmd)
+
+        if self.status() == OBDStatus.NOT_CONNECTED:
+            logger.warning("Query failed, no connection available")
+            return OBDResponse()
+
+        # if the user forces, skip all checks
+        if not self.test_cmd(cmd):
+            return OBDResponse()
+
+        # send command and retrieve message
+        logger.info("Sending command: %s" % str(cmd))
+        cmd_string = self.__build_command_string(cmd)
+        lines = self.interface.send_and_parse(cmd=cmd_string, return_lines=True)
+        
+        codes = []
+        for line in lines:
+            line = line.replace(" ", "")
+            if "NO" in line:
+                continue
+
+            bytes_line = bytearray()
+
+            ## SE FOR O OBDSIM
+            if simulador == 1:
+                #pdb.set_trace()
+                line = line[7:]
+                bytes_line = bytearray(unhexlify(line))
+            ## SE FOR O Simulator PRO
+            elif simulador == 2:
+                line = line[9:]
+                bytes_line = bytearray(unhexlify(line))
+
+            for n in range(1, len(bytes_line), 2):
+                print(str(bytes_line[n-1]) + " | " + str(bytes_line[n]))
+                # parse the code
+                dtc = parse_dtc( (bytes_line[n-1], bytes_line[n]) )
+
+                if dtc is not None:
+                    codes.append(dtc)
+        
+        return codes
+
 
     def query(self, cmd, force=False):
         """
@@ -297,7 +353,7 @@ class OBD(object):
         logger.info("Sending command: %s" % str(cmd))
         cmd_string = self.__build_command_string(cmd)
         messages = self.interface.send_and_parse(cmd_string)
-
+        
         # if we're sending a new command, note it
         # first check that the current command WASN'T sent as an empty CR
         # (CR is added by the ELM327 class)

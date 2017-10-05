@@ -33,6 +33,7 @@
 from binascii import unhexlify
 from obd.utils import contiguous
 from .protocol import Protocol, Message, Frame, ECU
+import pdb
 
 import logging
 
@@ -189,6 +190,9 @@ class CANProtocol(Protocol):
 
             ff = []
             cf = []
+
+
+            #pdb.set_trace()
 
             for f in frames:
                 if f.type == self.FRAME_TYPE_FF:

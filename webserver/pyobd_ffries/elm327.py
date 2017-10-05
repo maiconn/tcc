@@ -36,6 +36,8 @@ import time
 import logging
 from .protocols import *
 from .utils import OBDStatus
+import pdb
+import threading
 
 logger = logging.getLogger(__name__)
 
@@ -101,7 +103,7 @@ class ELM327:
     # going to be less picky about the time required to detect it.
     _TRY_BAUDS = [ 38400, 9600, 230400, 115200, 57600, 19200 ]
 
-
+    lock = threading.Lock()
 
     def __init__(self, portname, baudrate, protocol):
         """Initializes port by resetting device and gettings supported PIDs. """
@@ -376,7 +378,7 @@ class ELM327:
             self.__port = None
 
 
-    def send_and_parse(self, cmd):
+    def send_and_parse(self, cmd, return_lines=False):
         """
             send() function used to service all OBDCommands
 
@@ -387,15 +389,18 @@ class ELM327:
 
             Returns a list of Message objects
         """
+        with self.lock:
+            if self.__status == OBDStatus.NOT_CONNECTED:
+                logger.info("cannot send_and_parse() when unconnected")
+                return None
 
-        if self.__status == OBDStatus.NOT_CONNECTED:
-            logger.info("cannot send_and_parse() when unconnected")
-            return None
+            lines = self.__send(cmd)
 
-        lines = self.__send(cmd)
-        messages = self.__protocol(lines)
-        return messages
+            if return_lines:
+                return lines
 
+            messages = self.__protocol(lines)
+            return messages
 
     def __send(self, cmd, delay=None):
         """
@@ -405,14 +410,17 @@ class ELM327:
             returns result of __read() (a list of line strings)
             after an optional delay.
         """
-
+        print("self.__write(cmd): "+str(cmd))
         self.__write(cmd)
 
         if delay is not None:
             logger.debug("wait: %d seconds" % delay)
             time.sleep(delay)
 
-        return self.__read()
+        reading = self.__read()
+
+        print("self.__read(cmd): "+str(reading))
+        return reading
 
 
     def __write(self, cmd):

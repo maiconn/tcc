@@ -29,7 +29,7 @@
 # along with python-OBD.  If not, see <http://www.gnu.org/licenses/>.  #
 #                                                                      #
 ########################################################################
-
+import pdb
 import math
 import functools
 from .utils import *
@@ -387,13 +387,19 @@ def dtc(messages):
     """ converts a frame of 2-byte DTCs into a list of DTCs """
     codes = []
     d = []
+    #pdb.set_trace()
     for message in messages:
-        d += message.data[2:] # remove the mode and DTC_count bytes
+        print('message.raw: ' + str(message.raw()))
+        print('message.hex: ' + str(message.hex()))
+        print('message.data: ' + str(message.data))
+        d += message.data[2:]
+        #d += message.data[2:] # remove the mode and DTC_count bytes
+        print('message.data[2:]: ' + str(d))
 
     # look at data in pairs of bytes
     # looping through ENDING indices to avoid odd (invalid) code lengths
     for n in range(1, len(d), 2):
-
+        print(str(d[n-1]) + " | " + str(d[n]))
         # parse the code
         dtc = parse_dtc( (d[n-1], d[n]) )
 
