@@ -1,7 +1,7 @@
 import smtplib, time, io, os
 from twilio.rest import Client
 from flask import json
-from pyobd_ffries import obd
+from python_obd.obd import obd
  
 """
 SIMULADOR:

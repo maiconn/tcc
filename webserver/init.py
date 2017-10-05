@@ -4,7 +4,7 @@ from coord import Coord
 from monitor_dtc import MonitorDTC
 from datetime import datetime
 from flask_cors import CORS
-from pyobd_ffries import obd
+from python_obd.obd import obd
 from utils import *
 
 connection = None
@@ -34,7 +34,8 @@ def main(argv):
 
     _config_pastas()
     _connect_obd()
-    MonitorDTC(30, connection, get_debug())
+
+    #MonitorDTC(30, connection, get_debug())
     
     app.run(debug=_debug, host='0.0.0.0')
 
