@@ -14,7 +14,7 @@ import { LocalizacaoDetailPage } from '../../pages/localizacaoDetail/localizacao
 export class LocalizacaoPage {
   private localizacoes: Array<Object>;
 
-  constructor(public navCtrl: NavController, 
+  constructor(public navCtrl: NavController,
               private http : Http, 
               public loadingCtrl: LoadingController, 
               private storage: Storage, 

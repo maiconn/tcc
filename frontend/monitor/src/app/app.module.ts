@@ -13,6 +13,7 @@ import { SensoresPage } from '../pages/sensores/sensores';
 import { FotosPage } from '../pages/fotos/fotos';
 import { FotoDetailPage } from '../pages/fotoDetail/fotoDetail';
 import { ConfiguracoesPage } from '../pages/configuracoes/configuracoes';
+import { StatusPage } from '../pages/status/status';
 import { TabsPage } from '../pages/tabs/tabs';
 import { AppSettings } from '../app/app.settings';
 
@@ -29,6 +30,7 @@ import { IonicStorageModule } from '@ionic/storage';
     FotosPage,
     FotoDetailPage,
     ConfiguracoesPage,
+    StatusPage,
     TabsPage
   ],
   imports: [
@@ -50,6 +52,7 @@ import { IonicStorageModule } from '@ionic/storage';
     FotosPage,
     FotoDetailPage,
     ConfiguracoesPage,
+    StatusPage,
     TabsPage
   ],
   providers: [

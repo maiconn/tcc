@@ -12,9 +12,15 @@ sudo rfcomm bind /dev/rfcomm1 40:88:05:5E:04:74 1
 
 sdptool add --channel=3 SP
 ----------
+[CELULAR]
 sdptool browse 40:88:05:5E:04:74
 sudo rfcomm release 0
 sudo rfcomm bind 0 40:88:05:5E:04:74 10
+
+[NOTEBOOK]
+sdptool browse 5C:C9:D3:63:F7:BE
+sudo rfcomm release 0
+sudo rfcomm bind 0 5C:C9:D3:63:F7:BE 3
 
 
 
@@ -48,3 +54,6 @@ https://github.com/matthewcodes/OBDSim/
 GPS:
 sudo gpsd /dev/serial0 -F /var/run/gpsd.sock
 sudo cgps -s
+
+
+obdsim.exe -w COM10

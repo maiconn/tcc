@@ -2,8 +2,15 @@ import { NgModule } from '@angular/core';
 
 @NgModule({})
 export class AppSettings {
-    public static API_ENDPOINT_INIT = 'http://192.168.0.9:5000/';
-    public API_ENDPOINT = '';
+    public static API_ENDPOINT_INIT = 'http://192.168.0.12:5000/';
+
+    public static DEFAULT_CONFIGURATIONS = { 
+        endpoint: AppSettings.API_ENDPOINT_INIT,
+        email: '',
+        celular: '',
+        notificarEmail: false,
+        notificarSMS: false
+      };
 
     constructor(){
         
@@ -16,7 +23,6 @@ export class AppSettings {
         } else {
             _configuracoes = _configuracoes;
         }
-        console.log(_configuracoes);
         return _configuracoes.endpoint;
     }
 

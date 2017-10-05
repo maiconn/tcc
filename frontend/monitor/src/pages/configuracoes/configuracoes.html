@@ -20,5 +20,31 @@
         <ion-input type="text" [(ngModel)]="configuracoes.endpoint" placeholder="Endpoint"></ion-input>
       </ion-item>
     </ion-list>
+    <button ion-button block (click)="testarEndpoint()">Testar</button>
+  </ion-card>
+
+  <ion-card>
+    <ion-card-header>
+      <ion-icon name="notifications"></ion-icon> Notificações
+    </ion-card-header>
+    <ion-list>
+      <ion-item>
+        <ion-label stacked><ion-icon name="mail"></ion-icon> E-mail</ion-label>
+        <ion-input type="email" [(ngModel)]="configuracoes.email" placeholder="E-mail"></ion-input>
+      </ion-item>
+      <ion-item>
+        <ion-label stacked><ion-icon name="phone-portrait"></ion-icon> Celular</ion-label>
+        <ion-input type="tel" [(ngModel)]="configuracoes.celular" placeholder="Celular"></ion-input>
+      </ion-item>
+
+      <ion-item>
+        <ion-label>Notificar via e-mail.</ion-label>
+        <ion-checkbox [(ngModel)]="configuracoes.notificarEmail"></ion-checkbox>
+      </ion-item>
+      <ion-item>
+        <ion-label>Notificar via sms.</ion-label>
+        <ion-checkbox [(ngModel)]="configuracoes.notificarSMS"></ion-checkbox>
+      </ion-item>
+    </ion-list>
   </ion-card>
 </ion-content>
