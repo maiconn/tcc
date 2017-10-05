@@ -6,6 +6,8 @@ __pycache__/
 python_obd/
 Fotos/
 database/
+.vscode/
+.vs/
 
 # C extensions
 *.so
