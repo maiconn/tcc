@@ -27,9 +27,8 @@ class MonitorDTC:
         configs = get_configs()
         log("configs: %s" % (str(configs)))
 
-        dtc = get_status_dtc(self.connection)
+        dtc = get_status_dtc(self.connection())
         log("dtcs: %s" % (str(dtc.json_dump())))
         
-
         log("=====finalizando monitorar_dtcs=====")
         self.start_monitor()

@@ -1,17 +1,19 @@
 import smtplib, time, io, os
 from twilio.rest import Client
 from flask import json
-from python_obd.obd import obd
+from collections import namedtuple
+from python_obd.obd import obd, OBDStatus
  
 """
 SIMULADOR:
             -1 = BUSCAR DAS CONFIGS
              0 = SEM SIMULADOR
              1 = OBDSIM
-             2 = ECU Simulator PRO
+             2 = ECU Engine PRO
 """
 _simulador = -1
 _debug = True
+_connection = None
 
 class Status:
     def __init__(self, MIL, qtd_erros, tipo_ignicao):
@@ -32,8 +34,11 @@ class StatusDTC:
         return dict(dtc_registrados=self.registrados, dtc_pendentes=self.pendentes, status=self.status.json_dump())
 
 def get_status_dtc(connection):
-    dtc_registrados = connection.query_dtc(simulador=get_simulador())
-    dtc_pendentes = connection.query_dtc(cmd=obd.commands.GET_CURRENT_DTC ,simulador=get_simulador()) 
+    simulador = get_simulador()
+    log("get_status_dtc: "+str(simulador))
+
+    dtc_registrados = connection.query_dtc(simulador=simulador)
+    dtc_pendentes = connection.query_dtc(cmd=obd.commands.GET_CURRENT_DTC ,simulador=simulador) 
     status = connection.query(obd.commands.STATUS)
     status = status.value
 
@@ -57,7 +62,7 @@ def get_configs():
         try:
             with io.open('./database/configs.txt', 'r') as f:
                 content = f.read()
-            configs = json.loads(content)    
+            configs = json.loads(content, object_hook=lambda d: namedtuple('X', d.keys())(*d.values()))    
         except IOError as ex:
             if "No such file or directory" in str(ex):
                 configs = None
@@ -121,6 +126,34 @@ def get_simulador():
         if(configs.simulador is None):
             return 0
 
-        return configs.simulador
+        return int(configs.simulador)
     else:
-        return _simulador 
+        return int(_simulador)
+
+def get_connection():
+    global _connection
+    if _connection is None:
+        return _connect_obd()
+    elif _connection.status() == OBDStatus.NOT_CONNECTED:
+        return _connect_obd()
+    else:
+        return _connection
+
+def _connect_obd():
+    global _connection
+    try:
+        if get_debug():
+            obd.logger.setLevel(obd.logging.DEBUG) 
+            _connection = obd.OBD(baudrate=9600)
+            log("protocolo: " + _connection.get_protocol_name())
+        else:
+            _connection = obd.OBD()
+
+        if  _connection.status() == OBDStatus.NOT_CONNECTED:
+            raise Excetion("nao conectado com ELM237.")
+
+        return _connection
+    except Exception as ex:
+        _connection = None
+        log("OBDERROR: " + str(ex))  
+        return json.dumps(dict(error =  str(ex)))
