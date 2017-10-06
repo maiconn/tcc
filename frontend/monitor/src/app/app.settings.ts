@@ -9,7 +9,8 @@ export class AppSettings {
         email: '',
         celular: '',
         notificarEmail: false,
-        notificarSMS: false
+        notificarSMS: false,
+        simulador: 0
       };
 
     constructor(){

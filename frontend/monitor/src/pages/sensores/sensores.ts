@@ -12,6 +12,7 @@ export class SensoresPage {
 
   public list = [];
   private loader;
+  private lerSensores: boolean = false;
 
   constructor(public navCtrl: NavController, 
               private http : Http, 
@@ -35,7 +36,13 @@ export class SensoresPage {
     this.monitorarSensores();
   }
 
+  public pausar(){
+    this.list = [];
+    this.lerSensores = false;
+  }
+
   public monitorarSensores(){
+    this.lerSensores = true;
     this.storage.get("configuracoes").then((result) => 
     {
         var _endpoint = this.appSettings.getEndpointByResult(result);      
@@ -45,11 +52,10 @@ export class SensoresPage {
             if(list.error){
               AppSettings.TOAST(this.toastCtrl, 'ERROR', list.error, 3000);
               this.list = [];
-            } else {
+            } else if(this.lerSensores){
               this.list = list;
               this.monitorarSensores();
             }
-            console.log(list);
             this.loader.dismiss();
           },
           error => {

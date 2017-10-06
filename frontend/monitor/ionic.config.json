@@ -1,6 +1,6 @@
 {
   "name": "monitor",
-  "app_id": "91dde4f6",
+  "app_id": "14a22d17",
   "type": "ionic-angular",
   "integrations": {
     "cordova": {}

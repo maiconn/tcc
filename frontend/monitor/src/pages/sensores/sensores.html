@@ -2,6 +2,9 @@
   <ion-navbar>
     <ion-title>Sensores</ion-title>
     <ion-buttons end>
+      <button ion-button icon-only (click)="pausar()">
+        <ion-icon name="pause"></ion-icon>
+      </button>
       <button ion-button icon-only (click)="reconectar()">
         <ion-icon name="refresh"></ion-icon>
       </button>
@@ -13,15 +16,8 @@
   <ion-grid>
     <ion-row>
         <ion-col col-6 col-sm-6 col-md-6 col-lg-6 col-xl-6 *ngFor="let sensor of list">
-            <b>
-              <ion-icon name="build" *ngIf="sensor.sensor == 'S-S DTC Cleared'" larger></ion-icon>
-              <ion-icon name="thermometer" *ngIf="sensor.sensor == 'Coolant Temp'" larger></ion-icon>
-              <ion-icon name="timer" *ngIf="sensor.sensor == 'Engine RPM'" larger></ion-icon>
-              <ion-icon name="speedometer" *ngIf="sensor.sensor == 'Vehicle Speed'" larger></ion-icon>
-              <ion-icon name="thermometer" *ngIf="sensor.sensor == 'Intake Air Temp'" larger></ion-icon>
-              
-              {{sensor.sensor}}</b><br>
-            {{sensor.valor}}
+            <span style="font-size:1.2em;"><b>{{sensor.valor}}</b> {{sensor.unidade}}</span> <br>
+            {{sensor.sensor}}
         </ion-col>
     </ion-row>
   </ion-grid>

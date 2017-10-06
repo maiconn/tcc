@@ -16,7 +16,8 @@ export class ConfiguracoesPage {
     email: '',
     celular: '',
     notificarEmail: false,
-    notificarSMS: false
+    notificarSMS: false,
+    simulador: 0
   };
 
   constructor(public navCtrl: NavController,
@@ -90,7 +91,7 @@ export class ConfiguracoesPage {
     },
     error => {
       this.storage.set("configuracoes", this.configuracoes);
-      AppSettings.TOAST(this.toastCtrl, "Não foi possível salvar no servidor, Endpoint fora do ar!", error, 2500);
+      AppSettings.TOAST(this.toastCtrl, "ERROR", "Não foi possível salvar no servidor, Endpoint fora do ar!", 3000);
       loader.dismiss();
     });
   }
@@ -110,7 +111,7 @@ export class ConfiguracoesPage {
     error => {
       console.log(error);
       loader.dismiss();
-      AppSettings.TOAST(this.toastCtrl, 'ERROR', "Endpoint inválido!", 2000);
+      AppSettings.TOAST(this.toastCtrl, 'ERROR', "Endpoint fora do ar!", 2000);
     });   
   }
 }
