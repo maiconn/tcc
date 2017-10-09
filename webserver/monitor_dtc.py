@@ -1,6 +1,8 @@
 from datetime import datetime, timedelta
 from threading import Timer
-from utils import get_configs, get_status_dtc, log
+from collections import namedtuple
+from utils import *
+import pdb
 
 class MonitorDTC:
     debug = True
@@ -8,10 +10,8 @@ class MonitorDTC:
     connection = None
     delay = 0
 
-    def __init__(self, seconds, connection, debug):
+    def __init__(self, seconds):
         self.seconds = seconds
-        self.connection = connection
-        self.debug = debug
 
         newDate = datetime.now() + timedelta(seconds=seconds)
         self.delay = (newDate - datetime.now()).total_seconds()
@@ -24,11 +24,85 @@ class MonitorDTC:
 
     def monitorar_dtcs(self):
         log("======iniciando monitorar_dtcs======")
-        configs = get_configs()
-        log("configs: %s" % (str(configs)))
+        try:
+            configs = get_configs()
+            if configs is None:
+                raise Exception("Sem configuracoes...")
+            log("configs: %s" % (str(configs)))
 
-        dtc = get_status_dtc(self.connection())
-        log("dtcs: %s" % (str(dtc.json_dump())))
+            dtcs = get_status_dtc(get_connection())
+            log("dtcs_capturados: %s" % (str(dtcs.json_dump())))
+            
+            db_status = self.get_db_status()
+            if db_status is None:
+                db_status = []
+                
+            log("db_status: %s" % (str(db_status)))
+
+            _novos_dtcs = []
+            for dtc in dtcs.registrados:
+                codigo = dtc.get('codigo')
+                if codigo not in db_status:
+                    _novos_dtcs.append(codigo)
+            
+            for dtc in dtcs.pendentes:
+                codigo = dtc.get('codigo')
+                if codigo not in db_status:
+                    _novos_dtcs.append(codigo)
+
+            _novos_dtcs = list(set(_novos_dtcs))
+            log("_novos_dtcs: %s" % (str(_novos_dtcs)))
+
+            notificou = True
+            try:
+                if len(_novos_dtcs) > 0 and configs.notificarSMS:
+                    log('enviando notificacao sms para: '+ configs.celular)
+                    send_sms(configs.celular, 'MONITOR: codigos de erro encontrados em seu veiculo!')
+            except Exception as ex:
+                notificou = False
+                log("[ERRO_SMS: MONITOR_DTC] "+ str(ex))
+    
+            try:
+                if len(_novos_dtcs) > 0 and configs.notificarEmail:
+                    log('enviando notificacao de e-mail para: '+ configs.email)
+                    send_email(configs.email, 'MONITOR: codigos de erro encontrados em seu veiculo! '+str(_novos_dtcs))
+            except Exception as ex:
+                notificou = False
+                log("[ERRO_EMAIL: MONITOR_DTC] "+ str(ex))
         
-        log("=====finalizando monitorar_dtcs=====")
+            if notificou:
+                if len(_novos_dtcs) > 0:
+                    db_status += _novos_dtcs
+
+                # pdb.set_trace()
+                error = self.save_db_status(db_status).get("error")
+                if error:
+                    log("erro ao salvar status: " + error)
+        except Exception as ex:
+            log("MONITOR_DTC: "+str(ex))
+        finally:
+            log("=====finalizando monitorar_dtcs=====")
+        
         self.start_monitor()
+
+    def get_db_status(self):
+        status = None
+        try:
+            with io.open('./database/status.txt', 'r') as f:
+                content = f.read()
+            if content is not None and content:
+                status = json.loads(content, object_hook=lambda d: namedtuple('X', d.keys())(*d.values()))    
+        except IOError as ex:
+            if "No such file or directory" in str(ex):
+                status = None
+            else:
+                raise ex
+        return status
+
+    def save_db_status(self, status):
+        try:
+            with io.open('./database/status.txt', 'w', encoding='utf-8') as f:
+                f.write(unicode(json.dumps(status, ensure_ascii=False)))
+            return dict(status =  "OK")
+        except Exception as ex:
+            return dict(error = str(ex))

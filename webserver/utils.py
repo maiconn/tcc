@@ -31,7 +31,10 @@ class StatusDTC:
         self.status = status
 
     def json_dump(self):
-        return dict(dtc_registrados=self.registrados, dtc_pendentes=self.pendentes, status=self.status.json_dump())
+        status = None
+        if self.status is not None:
+            status = self.status.json_dump()
+        return dict(dtc_registrados=self.registrados, dtc_pendentes=self.pendentes, status=status)
 
 def get_status_dtc(connection):
     simulador = get_simulador()
@@ -51,8 +54,11 @@ def get_status_dtc(connection):
 
     for codigo, descricao in dtc_pendentes:
         _pendentes.append(dict(codigo=codigo, descricao=descricao, url='http://www.troublecodes.net/'+str(codigo)))
-
-    _status = Status(MIL=status.MIL, qtd_erros=status.DTC_count, tipo_ignicao=status.ignition_type)
+    
+    _status = None
+    if status is not None:
+        _status = Status(MIL=status.MIL, qtd_erros=status.DTC_count, tipo_ignicao=status.ignition_type)
+    
     status_dtc = StatusDTC(_pendentes, _registrados, _status)
 
     return status_dtc    
@@ -62,7 +68,8 @@ def get_configs():
         try:
             with io.open('./database/configs.txt', 'r') as f:
                 content = f.read()
-            configs = json.loads(content, object_hook=lambda d: namedtuple('X', d.keys())(*d.values()))    
+            if content is not None and content:
+                configs = json.loads(content, object_hook=lambda d: namedtuple('X', d.keys())(*d.values()))    
         except IOError as ex:
             if "No such file or directory" in str(ex):
                 configs = None
@@ -92,10 +99,11 @@ def send_email(email, mensagem):
         server.ehlo()
         server.starttls()
         server.ehlo()
-        server.login("maicon.gerardi", "5158126-Ahuei1650")
+        server.login("monitor.tcc2", "meumonitor")
 
-        msg = "Te amo meu amor <3!" # The /n separates the message from the headers
-        server.sendmail("maicon.gerardi@gmail.com", "jaine.stark@gmail.com", msg)
+        msg = 'Subject: {}\n\n{}'.format('[Monitor Do Veiculo] IMPORTANTE!', mensagem) 
+
+        server.sendmail("monitor.tcc2@gmail.com", email, msg)
 
         log("Email Enviado para %s | Mensagem: %s" % (email, mensagem))
     except Exception as ex:
@@ -150,7 +158,7 @@ def _connect_obd():
             _connection = obd.OBD()
 
         if  _connection.status() == OBDStatus.NOT_CONNECTED:
-            raise Excetion("nao conectado com ELM237.")
+            raise Exception("nao conectado com ELM237.")
 
         return _connection
     except Exception as ex:

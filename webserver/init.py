@@ -15,7 +15,7 @@ def main(argv):
     _debug = True
     _monitor = False
     try:
-        opts, args = getopt.getopt(argv,"d:",["simulador=","debug="])
+        opts, args = getopt.getopt(argv,"dms:",["simulador=","debug=","monitor="])
     except getopt.GetoptError:
         print('init.py --simulador=(0,1,2) --debug=(0,1) --monitor=(0,1)')
         sys.exit(2)
@@ -38,7 +38,8 @@ def main(argv):
     _config_pastas()
     
     if _monitor:
-        MonitorDTC(30, get_connection, get_debug())   
+        MonitorDTC(30)   
+
 
     app.run(debug=_debug, host='0.0.0.0')
 
@@ -107,10 +108,14 @@ def get_obdii():
                                     b"07", 
                                     b"04", 
                                     b"0100", 
-                                    b"0140", 
-                                    b"0120",
-                                    b"0100",
+                                    b"0120", 
+                                    b"0140",
                                     b"0600",
+                                    b"0620",
+                                    b"0640",
+                                    b"0660",
+                                    b"0680",
+                                    b"06A0",
                                     b"0101" ]: 
             cmd = command
             response = connection.query(cmd)
@@ -131,12 +136,16 @@ def get_obdii():
             except AttributeError:
                 valor = response.value
                 unidade = ""
-            listSensors.append(dict(sensor = str(cmd.desc), valor = str(valor), unidade=unidade))
+            listSensors.append(dict(sensor=str(cmd.desc), 
+                                    valor=str(valor), 
+                                    unidade=unidade, 
+                                    codigo=str(cmd.command)))
 
-    return json.dumps(listSensors)
+    return json.dumps(sorted(listSensors, key=lambda s: s.get('codigo')))
 
 @app.route('/get_dtc')
 def get_dtc():
+    # pdb.set_trace()
     connection = get_connection()
     if not isinstance(connection, obd.OBD):
         return connection
