@@ -16,6 +16,9 @@ import { ConfiguracoesPage } from '../pages/configuracoes/configuracoes';
 import { StatusPage } from '../pages/status/status';
 import { TabsPage } from '../pages/tabs/tabs';
 import { AppSettings } from '../app/app.settings';
+import { HttpService } from '../app/http-service';
+
+import { RemoitService } from '../app/remoteit-service';
 
 import { StatusBar } from '@ionic-native/status-bar';
 import { SplashScreen } from '@ionic-native/splash-screen';
@@ -40,8 +43,7 @@ import { IonicStorageModule } from '@ionic/storage';
     AgmCoreModule.forRoot({
       apiKey: 'AIzaSyDdj6ktEhIiqI67yFYy6UCrz1kcQProAuc'
     }),
-    IonicStorageModule.forRoot(),
-    AppSettings
+    IonicStorageModule.forRoot()
   ],
   bootstrap: [IonicApp],
   entryComponents: [
@@ -59,7 +61,10 @@ import { IonicStorageModule } from '@ionic/storage';
     StatusBar,
     DatePipe,
     SplashScreen,
-    {provide: ErrorHandler, useClass: IonicErrorHandler}
+    {provide: ErrorHandler, useClass: IonicErrorHandler},
+    RemoitService,
+    AppSettings,
+    HttpService
   ]
 })
 export class AppModule {}

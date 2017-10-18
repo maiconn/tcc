@@ -10,6 +10,5 @@ export class LocalizacaoDetailPage {
 
   constructor(public navCtrl: NavController, public navParams: NavParams) {
     this.localizacao = navParams.get("localizacao");
-    console.log(this.localizacao);
   }
 }

@@ -1,8 +1,8 @@
 import { Component } from '@angular/core';
 import { NavController, ToastController, LoadingController } from 'ionic-angular';
-import { Http } from '@angular/http';
 import { Storage } from '@ionic/storage';
 import { AppSettings } from '../../app/app.settings';
+import { HttpService } from "../../app/http-service"
 
 @Component({
   selector: 'page-statusDetail',
@@ -20,8 +20,8 @@ export class StatusPage {
 
   public statusDtc = this.nullStatusDtc
 
-  constructor(public navCtrl: NavController, 
-    private http : Http, 
+  constructor(public navCtrl: NavController,
+    private httpService : HttpService,
     public loadingCtrl: LoadingController,
     private appSettings : AppSettings,
     private storage: Storage, 
@@ -41,32 +41,27 @@ export class StatusPage {
       content: "Carregando..."
     });
     this.loader.present();
-    this.storage.get("configuracoes").then((result) => 
-    {
-        var _endpoint = this.appSettings.getEndpointByResult(result);      
-        this.http.get(_endpoint + 'get_dtc').subscribe(
-          data => {
-            var statusDtc = data.json();
-            if(statusDtc.error){
-              AppSettings.TOAST(this.toastCtrl, 'ERROR', statusDtc.error, 3000);
-              this.statusDtc = this.nullStatusDtc;
-            } else {
-              this.statusDtc = statusDtc;
-            }
-            this.loader.dismiss();
-          },
-          error => {
-            this.statusDtc = this.nullStatusDtc;
-            console.log(error);
-            this.loader.dismiss();
-            AppSettings.TOAST(this.toastCtrl, 'ERROR', error, 3000);
-          }
-        );
-      }, (error) => 
-      {
-          console.log("ERROR DB: " + error);
-          AppSettings.TOAST(this.toastCtrl, 'ERROR', error, 3000);
-      }
-    );
+
+    this.appSettings.getEndpoint().then(endpoint => {
+      this.httpService.get(endpoint + 'get_dtc').then(result => {
+        var statusDtc = result.json();
+        if(statusDtc.error){
+          AppSettings.TOAST(this.toastCtrl, 'ERROR', statusDtc.error, 3000);
+          this.statusDtc = this.nullStatusDtc;
+        } else {
+          this.statusDtc = statusDtc;
+        }
+        this.loader.dismiss();
+      }).catch(error =>{
+        this.statusDtc = this.nullStatusDtc;
+        console.log(error);
+        this.loader.dismiss();
+        AppSettings.TOAST(this.toastCtrl, 'ERROR', error, 3000);
+      });
+    }).catch(error => {
+      this.loader.dismiss();
+      console.log("ERROR: " + error);
+      AppSettings.TOAST(this.toastCtrl, 'ERROR', error, 3000);
+    });
   }
 }

@@ -1,30 +1,26 @@
 import { Component } from '@angular/core';
 import { NavController, ToastController } from 'ionic-angular';
 import { Storage } from '@ionic/storage';
-import { Http } from '@angular/http';
 import { LoadingController } from 'ionic-angular';
 
 import { AppSettings } from '../../app/app.settings';
+import { RemoitService } from '../../app/remoteit-service';
+import { HttpService } from "../../app/http-service"
 
 @Component({
   selector: 'page-configuracoes',
   templateUrl: 'configuracoes.html'
 })
 export class ConfiguracoesPage {
-  public configuracoes = { 
-    endpoint: '',
-    email: '',
-    celular: '',
-    notificarEmail: false,
-    notificarSMS: false,
-    simulador: 0
-  };
+  public configuracoes = AppSettings.DEFAULT_CONFIGURATIONS;
 
   constructor(public navCtrl: NavController,
               private storage: Storage, 
               private toastCtrl: ToastController,
-              private http : Http, 
-              public loadingCtrl: LoadingController) 
+              public loadingCtrl: LoadingController,
+              private remoitService : RemoitService,
+              private appSettings : AppSettings,
+              private httpService : HttpService) 
   {
     let loader = this.loadingCtrl.create({
       content: "Carregando..."
@@ -32,42 +28,12 @@ export class ConfiguracoesPage {
     loader.present();
 
     storage.get("configuracoes").then((result) => {
+      loader.dismiss();
       this.configuracoes = result ? result : {};
       
       if(!this.configuracoes.endpoint){
         this.configuracoes = AppSettings.DEFAULT_CONFIGURATIONS;
       }
-
-      this.http.get(this.configuracoes.endpoint+"get_configs").subscribe(data => {
-        loader.dismiss();
-        if(data.json().endpoint){
-          this.configuracoes = data.json();
-        } else {
-          storage.get("configuracoes").then((result) => {
-            this.configuracoes = result ? result : {};
-            
-            if(!this.configuracoes.endpoint){
-              this.configuracoes = AppSettings.DEFAULT_CONFIGURATIONS;
-            }
-      
-          }, (error) => {
-            console.log("ERROR DB: ", error);
-          });
-        }
-      },
-      error => {
-        loader.dismiss();
-        storage.get("configuracoes").then((result) => {
-          this.configuracoes = result ? result : {};
-          
-          if(!this.configuracoes.endpoint){
-            this.configuracoes = AppSettings.DEFAULT_CONFIGURATIONS;
-          }
-    
-        }, (error) => {
-          console.log("ERROR DB: ", error);
-        });
-      });
     }, (error) => {
       loader.dismiss();
       console.log("ERROR DB: ", error);
@@ -81,37 +47,66 @@ export class ConfiguracoesPage {
     });
     loader.present();
 
-    this.http.post(this.configuracoes.endpoint + "save_configs", this.configuracoes)
-    .subscribe(data => {
-      if(data.json().status == "OK"){
+    this.appSettings.getEndpoint().then(endpoint => {
+      this.httpService.post(endpoint + "save_configs", this.configuracoes).then(result => {
+        if(result.json().status == "OK"){
+          this.storage.set("configuracoes", this.configuracoes);
+          AppSettings.TOAST(this.toastCtrl, null, 'Configurações salvas!', 2000);
+        }
+        loader.dismiss();
+      }).catch(error =>{
         this.storage.set("configuracoes", this.configuracoes);
-        AppSettings.TOAST(this.toastCtrl, null, 'Configurações salvas!', 2000);
-      }
-      loader.dismiss();
-    },
-    error => {
-      this.storage.set("configuracoes", this.configuracoes);
-      AppSettings.TOAST(this.toastCtrl, "ERROR", "Não foi possível salvar no servidor, Endpoint fora do ar!", 3000);
+        AppSettings.TOAST(this.toastCtrl, "ERROR", "Não foi possível salvar no servidor, Serviço fora do ar!", 3000);
+        loader.dismiss();
+      });
+    }).catch(error => {
+      AppSettings.TOAST(this.toastCtrl, "ERROR", error, 3000);
       loader.dismiss();
     });
   }
 
-  public testarEndpoint(){
+  public carregarConfiguracoesEndpoint(){
     let loader = this.loadingCtrl.create({
-      content: "Testando Endpoint..."
+      content: "Buscando configurações..."
     });
     loader.present();
 
-    this.http.get(this.configuracoes.endpoint).subscribe(data => {
-      if(data.json().status == "OK"){
-        AppSettings.TOAST(this.toastCtrl, null, 'Endpoint no ar!', 2000);
+    this.httpService.get(this.configuracoes.endpoint + 'get_configs').then(result => {
+      var configuracoes = result.json();
+      if(configuracoes.endpoint){
+        var endpoint = this.configuracoes.endpoint;
+        this.configuracoes = configuracoes;
+        this.configuracoes.endpoint = endpoint;
+        this.configuracoes.remoit = AppSettings.DEFAULT_REMOIT;
+        this.configuracoes.tipoConexao = 0;
+        this.storage.set("configuracoes", this.configuracoes);
+        AppSettings.TOAST(this.toastCtrl, null, 'Configurações carregadas!', 2000);
+      }  else if (configuracoes.error) {
+        AppSettings.TOAST(this.toastCtrl, 'ERROR', configuracoes.error, 2000);
       }
       loader.dismiss();
-    },
-    error => {
+    }).catch(error =>{
       console.log(error);
       loader.dismiss();
-      AppSettings.TOAST(this.toastCtrl, 'ERROR', "Endpoint fora do ar!", 2000);
-    });   
+      AppSettings.TOAST(this.toastCtrl, 'ERROR', "Serviço fora do ar!", 2000);
+    });
+  }
+
+  public carregarConfiguracoesRemoit(){
+    let loader = this.loadingCtrl.create({
+      content: "Buscando configurações..."
+    });
+    loader.present();
+
+    this.remoitService.getConfigs(this.configuracoes.remoit.user, this.configuracoes.remoit.senha).then(response => {
+      this.configuracoes.remoit = response;
+      this.storage.set("configuracoes", this.configuracoes);
+      AppSettings.TOAST(this.toastCtrl, null, 'Configurações carregadas!', 2000);
+      loader.dismiss();
+    }).catch(error => {
+      AppSettings.TOAST(this.toastCtrl, 'ERROR', `Ops... ${error}`, 2000);
+      console.log(error);
+      loader.dismiss();
+    });
   }
 }

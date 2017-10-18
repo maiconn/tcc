@@ -11,9 +11,4 @@ export class FotoDetailPage {
   constructor(public navCtrl: NavController, public navParams: NavParams) {
     this.imagem = navParams.get("foto");
   }
-
-  public nova(){
-    
-  }
-
 }

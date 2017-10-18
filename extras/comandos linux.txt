@@ -57,3 +57,24 @@ sudo cgps -s
 
 
 obdsim.exe -w COM10
+
+
+--build android app 
+ionic cordova run android --prod --release
+# or
+ionic cordova build android --prod --release
+
+"%java_home%\bin\keytool.exe" -genkey -v -keystore my-release-key.jks -keyalg RSA -keysize 2048 -validity 10000 -alias my-alias
+
+"%java_home%\bin\jarsigner.exe" -verbose -sigalg SHA1withRSA -digestalg SHA1 -keystore my-release-key.jks android-release-unsigned.apk my-alias
+
+"%android_home%\build-tools\25.0.3\zipalign.exe" -v 4 android-release-unsigned.apk Monitor1.0.apk
+
+
+"%android_home%\build-tools\25.0.3\apksigner" verify Monitor1.0.apk
+
+
+
+---INICIAR VPN
+sudo openvpn /etc/openvpn/client.conf
+tail /var/log/daemon.log

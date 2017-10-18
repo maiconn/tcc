@@ -10,19 +10,43 @@
 </ion-header>
 
 <ion-content>
+
   <ion-card>
     <ion-card-header>
-      <ion-icon name="cloud"></ion-icon> Servidor
+      <ion-icon name="cloud"></ion-icon> Conexão
     </ion-card-header>
     <ion-list>
-      <ion-item>
-        <ion-label stacked>Endpoint</ion-label>
-        <ion-input type="text" [(ngModel)]="configuracoes.endpoint" placeholder="Endpoint"></ion-input>
-      </ion-item>
-    </ion-list>
-    <button ion-button block (click)="testarEndpoint()">Testar</button>
+        <ion-item>
+          <ion-label stacked><ion-icon name="git-compare"></ion-icon> Tipo de Conexão</ion-label>
+          <ion-select [(ngModel)]="configuracoes.tipoConexao">
+            <ion-option value="0">Endpoint</ion-option>
+            <ion-option value="1">Proxy Remoit.net</ion-option>
+          </ion-select>
+        </ion-item>
+      </ion-list>
+      <ion-list *ngIf="configuracoes.tipoConexao == '0'">
+        <ion-item>
+          <ion-label stacked>Endpoint</ion-label>
+          <ion-input type="text" [(ngModel)]="configuracoes.endpoint" placeholder="Endpoint"></ion-input>
+        </ion-item>
+        <button ion-button block (click)="carregarConfiguracoesEndpoint()">Carregar Configurações</button>  
+      </ion-list>
+      <ion-list *ngIf="configuracoes.tipoConexao == '1'">
+        <ion-item>
+          <ion-label stacked><ion-icon name="contact"></ion-icon> Usuário</ion-label>
+          <ion-input type="text" [(ngModel)]="configuracoes.remoit.user" placeholder="Usuário"></ion-input>
+        </ion-item>
+        <ion-item>
+          <ion-label stacked><ion-icon name="key"></ion-icon> Senha</ion-label>
+          <ion-input type="password" [(ngModel)]="configuracoes.remoit.senha" placeholder="Senha"></ion-input>
+        </ion-item>  
+        <button ion-button block (click)="carregarConfiguracoesRemoit()">Carregar Configurações</button>
+        <ion-item>
+          <ion-label stacked><ion-icon name="globe"></ion-icon> Ip Proxy</ion-label>
+          <ion-input type="text" ng-readonly="false" [(ngModel)]="configuracoes.remoit.remoteIp"></ion-input>
+        </ion-item>  
+      </ion-list>
   </ion-card>
-
   <ion-card>
     <ion-card-header>
       <ion-icon name="build"></ion-icon> Geral
@@ -49,7 +73,7 @@
         <ion-input type="email" [(ngModel)]="configuracoes.email" placeholder="E-mail"></ion-input>
       </ion-item>
       <ion-item>
-        <ion-label stacked><ion-icon name="phone-portrait"></ion-icon> Celular</ion-label>
+        <ion-label stacked><ion-icon name="call"></ion-icon> Celular</ion-label>
         <ion-input type="tel" [(ngModel)]="configuracoes.celular" placeholder="Celular"></ion-input>
       </ion-item>
     </ion-list>
