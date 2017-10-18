@@ -1,4 +1,4 @@
-import smtplib, time, io, os
+import smtplib, time, io, os, threading
 from twilio.rest import Client
 from flask import json
 from collections import namedtuple
@@ -14,6 +14,8 @@ SIMULADOR:
 _simulador = -1
 _debug = True
 _connection = None
+
+executando_monitor = False
 
 class Status:
     def __init__(self, MIL, qtd_erros, tipo_ignicao):
@@ -36,32 +38,71 @@ class StatusDTC:
             status = self.status.json_dump()
         return dict(dtc_registrados=self.registrados, dtc_pendentes=self.pendentes, status=status)
 
-def get_status_dtc(connection):
-    simulador = get_simulador()
-    log("get_status_dtc: "+str(simulador))
+class ObdControl:
+    _lock_comandos = threading.Lock()
+    _lock_connection = threading.Lock()
 
-    dtc_registrados = connection.query_dtc(simulador=simulador)
-    dtc_pendentes = connection.query_dtc(cmd=obd.commands.GET_CURRENT_DTC ,simulador=simulador) 
-    status = connection.query(obd.commands.STATUS)
-    status = status.value
+    def __init__(self):
+        self._connection = None
 
-    _registrados = []
-    _pendentes = []
-    for codigo, descricao in dtc_registrados:
-        _registrados.append(dict(codigo=codigo, 
-                                descricao=descricao, 
-                                url='http://www.troublecodes.net/'+str(codigo)))
+    def execute_query(self, connection, cmd):
+        with self._lock_comandos:
+            return self._connection.query(cmd)
 
-    for codigo, descricao in dtc_pendentes:
-        _pendentes.append(dict(codigo=codigo, descricao=descricao, url='http://www.troublecodes.net/'+str(codigo)))
-    
-    _status = None
-    if status is not None:
-        _status = Status(MIL=status.MIL, qtd_erros=status.DTC_count, tipo_ignicao=status.ignition_type)
-    
-    status_dtc = StatusDTC(_pendentes, _registrados, _status)
+    def get_status_dtc(self, connection):
+        with self._lock_comandos:
+            simulador = get_simulador()
+            log("get_status_dtc: "+str(simulador))
 
-    return status_dtc    
+            dtc_registrados = connection.query_dtc(simulador=simulador)
+            dtc_pendentes = connection.query_dtc(cmd=obd.commands.GET_CURRENT_DTC ,simulador=simulador) 
+            status = connection.query(obd.commands.STATUS)
+            status = status.value
+
+            _registrados = []
+            _pendentes = []
+            for codigo, descricao in dtc_registrados:
+                _registrados.append(dict(codigo=codigo, 
+                                        descricao=descricao, 
+                                        url='http://www.troublecodes.net/'+str(codigo)))
+
+            for codigo, descricao in dtc_pendentes:
+                _pendentes.append(dict(codigo=codigo, descricao=descricao, url='http://www.troublecodes.net/'+str(codigo)))
+            
+            _status = None
+            if status is not None:
+                _status = Status(MIL=status.MIL, qtd_erros=status.DTC_count, tipo_ignicao=status.ignition_type)
+            
+            status_dtc = StatusDTC(_pendentes, _registrados, _status)
+            return status_dtc
+
+    def get_connection(self):
+        with self._lock_connection:
+            if self._connection is None:
+                return self._connect_obd()
+            elif self._connection.status() == OBDStatus.NOT_CONNECTED:
+                return self._connect_obd()
+            else:
+                return self._connection
+
+    def _connect_obd(self):
+        try:
+            if get_debug():
+                obd.logger.setLevel(obd.logging.DEBUG) 
+                self._connection = obd.OBD(baudrate=9600)
+                log("protocolo: " + self._connection.get_protocol_name())
+            else:
+                self._connection = obd.OBD()
+
+            if  self._connection.status() == OBDStatus.NOT_CONNECTED:
+                raise Exception("nao conectado com ELM237.")
+
+            return self._connection
+        except Exception as ex:
+            self._connection = None
+            log("OBDERROR: " + str(ex))  
+            return json.dumps(dict(error =  str(ex)))
+
 
 def get_configs():
         configs = None
@@ -105,9 +146,9 @@ def send_email(email, mensagem):
 
         server.sendmail("monitor.tcc2@gmail.com", email, msg)
 
-        log("Email Enviado para %s | Mensagem: %s" % (email, mensagem))
+        print("Email Enviado para %s | Mensagem: %s" % (email, mensagem))
     except Exception as ex:
-        log("EMAIL ERROR: " + str(ex))  
+        print("EMAIL ERROR: " + str(ex))  
 
 def log(message):
     if get_debug():
@@ -131,37 +172,9 @@ def get_simulador():
         configs = get_configs()
 
         #se nao tiver configs retorna sem simulador
-        if(configs.simulador is None):
+        if(configs is None):
             return 0
 
         return int(configs.simulador)
     else:
         return int(_simulador)
-
-def get_connection():
-    global _connection
-    if _connection is None:
-        return _connect_obd()
-    elif _connection.status() == OBDStatus.NOT_CONNECTED:
-        return _connect_obd()
-    else:
-        return _connection
-
-def _connect_obd():
-    global _connection
-    try:
-        if get_debug():
-            obd.logger.setLevel(obd.logging.DEBUG) 
-            _connection = obd.OBD(baudrate=9600)
-            log("protocolo: " + _connection.get_protocol_name())
-        else:
-            _connection = obd.OBD()
-
-        if  _connection.status() == OBDStatus.NOT_CONNECTED:
-            raise Exception("nao conectado com ELM237.")
-
-        return _connection
-    except Exception as ex:
-        _connection = None
-        log("OBDERROR: " + str(ex))  
-        return json.dumps(dict(error =  str(ex)))

@@ -7,11 +7,12 @@ import pdb
 class MonitorDTC:
     debug = True
     seconds = 0
-    connection = None
     delay = 0
+    obd_control = None
 
-    def __init__(self, seconds):
+    def __init__(self, seconds, obd_control):
         self.seconds = seconds
+        self.obd_control = obd_control
 
         newDate = datetime.now() + timedelta(seconds=seconds)
         self.delay = (newDate - datetime.now()).total_seconds()
@@ -19,18 +20,31 @@ class MonitorDTC:
         self.start_monitor()
 
     def start_monitor(self):
+        global executando_monitor
+        while executando_monitor:
+            time.sleep(1)
+
         t = Timer(self.delay, self.monitorar_dtcs)
         t.start()
 
     def monitorar_dtcs(self):
+        global executando_monitor
         log("======iniciando monitorar_dtcs======")
+        log(str(self.obd_control))
         try:
+            executando_monitor = True
+
+            # pdb.set_trace()
             configs = get_configs()
             if configs is None:
                 raise Exception("Sem configuracoes...")
             log("configs: %s" % (str(configs)))
 
-            dtcs = get_status_dtc(get_connection())
+            connection = self.obd_control.get_connection()
+            if not isinstance(connection, obd.OBD):
+                raise Exception("Sem conexao obd2... " + str(connection))
+
+            dtcs = self.obd_control.get_status_dtc(connection)
             log("dtcs_capturados: %s" % (str(dtcs.json_dump())))
             
             db_status = self.get_db_status()
@@ -57,7 +71,7 @@ class MonitorDTC:
             try:
                 if len(_novos_dtcs) > 0 and configs.notificarSMS:
                     log('enviando notificacao sms para: '+ configs.celular)
-                    send_sms(configs.celular, 'MONITOR: codigos de erro encontrados em seu veiculo!')
+                    send_sms(configs.celular, 'Codigos de erro encontrados em seu veiculo! '+str(_novos_dtcs))
             except Exception as ex:
                 notificou = False
                 log("[ERRO_SMS: MONITOR_DTC] "+ str(ex))
@@ -65,7 +79,7 @@ class MonitorDTC:
             try:
                 if len(_novos_dtcs) > 0 and configs.notificarEmail:
                     log('enviando notificacao de e-mail para: '+ configs.email)
-                    send_email(configs.email, 'MONITOR: codigos de erro encontrados em seu veiculo! '+str(_novos_dtcs))
+                    send_email(configs.email, 'Codigos de erro encontrados em seu veiculo! '+str(_novos_dtcs))
             except Exception as ex:
                 notificou = False
                 log("[ERRO_EMAIL: MONITOR_DTC] "+ str(ex))
@@ -81,6 +95,7 @@ class MonitorDTC:
         except Exception as ex:
             log("MONITOR_DTC: "+str(ex))
         finally:
+            executando_monitor = False
             log("=====finalizando monitorar_dtcs=====")
         
         self.start_monitor()

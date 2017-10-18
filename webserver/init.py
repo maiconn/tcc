@@ -11,7 +11,10 @@ import numbers
 app = Flask(__name__)
 CORS(app)
 
+obd_control = None
+
 def main(argv):
+    global obd_control
     _debug = True
     _monitor = False
     try:
@@ -36,12 +39,13 @@ def main(argv):
     log('  _monitor: '+ str(_monitor))
 
     _config_pastas()
+    obd_control = ObdControl()
     
     if _monitor:
-        MonitorDTC(30)   
+        # MonitorDTC(30).monitorar_dtcs()
+        MonitorDTC(40, obd_control)    
 
-
-    app.run(debug=_debug, host='0.0.0.0')
+    app.run(debug=_debug, host='0.0.0.0', port=80)
 
 @app.route('/')
 def index():
@@ -97,7 +101,9 @@ def get_gps():
 
 @app.route('/get_obdii')
 def get_obdii():
-    connection = get_connection()
+    global obd_control
+    log(str(obd_control))
+    connection = obd_control.get_connection()
     if not isinstance(connection, obd.OBD):
         return connection
 
@@ -118,7 +124,7 @@ def get_obdii():
                                     b"06A0",
                                     b"0101" ]: 
             cmd = command
-            response = connection.query(cmd)
+            response = obd_control.execute_query(connection, cmd)
 
             valor = ""
             unidade = ""
@@ -146,11 +152,12 @@ def get_obdii():
 @app.route('/get_dtc')
 def get_dtc():
     # pdb.set_trace()
-    connection = get_connection()
+    global obd_control
+    connection = obd_control.get_connection()
     if not isinstance(connection, obd.OBD):
         return connection
 
-    return json.dumps(get_status_dtc(connection).json_dump())
+    return json.dumps(obd_control.get_status_dtc(connection).json_dump())
 
 @app.route('/save_configs', methods=['POST'])
 def save_configs():
@@ -165,14 +172,15 @@ def save_configs():
 @app.route('/get_configs', methods=['GET'])
 def configs():
     try:
+        # pdb.set_trace()
         configs = get_configs()
         if configs is not None:
             return json.dumps(configs.__dict__)
         else:
-            return {}
+            return json.dumps(dict())
     except IOError as ex:
         if "No such file or directory" in str(ex):
-            return {}
+            return json.dumps(dict())
     except Exception as ex2:
             return json.dumps(dict(error = str(ex2)))
 
