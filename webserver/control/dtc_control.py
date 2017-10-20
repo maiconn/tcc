@@ -1,10 +1,10 @@
 from datetime import datetime, timedelta
 from threading import Timer
 from collections import namedtuple
-from utils import *
+from utils import log
 import pdb
 
-class MonitorDTC:
+class DTCControl:
     debug = True
     seconds = 0
     delay = 0
@@ -20,17 +20,12 @@ class MonitorDTC:
         self.start_monitor()
 
     def start_monitor(self):
-        global executando_monitor
-        while executando_monitor:
-            time.sleep(1)
-
         t = Timer(self.delay, self.monitorar_dtcs)
         t.start()
 
     def monitorar_dtcs(self):
         global executando_monitor
         log("======iniciando monitorar_dtcs======")
-        log(str(self.obd_control))
         try:
             executando_monitor = True
 
@@ -38,7 +33,6 @@ class MonitorDTC:
             configs = get_configs()
             if configs is None:
                 raise Exception("Sem configuracoes...")
-            log("configs: %s" % (str(configs)))
 
             connection = self.obd_control.get_connection()
             if not isinstance(connection, obd.OBD):
@@ -95,11 +89,9 @@ class MonitorDTC:
         except Exception as ex:
             log("MONITOR_DTC: "+str(ex))
         finally:
-            executando_monitor = False
             log("=====finalizando monitorar_dtcs=====")
+            self.start_monitor()
         
-        self.start_monitor()
-
     def get_db_status(self):
         status = None
         try:

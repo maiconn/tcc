@@ -3,9 +3,10 @@ __pycache__/
 *.py[cod]
 
 # minhas coisas
-python_obd/
+control/python_obd/
 Fotos/
 database/
+log/
 .vscode/
 .vs/
 

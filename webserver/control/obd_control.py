@@ -1,21 +1,7 @@
-import smtplib, time, io, os, threading
-from twilio.rest import Client
-from flask import json
-from collections import namedtuple
-from python_obd.obd import obd, OBDStatus
- 
-"""
-SIMULADOR:
-            -1 = BUSCAR DAS CONFIGS
-             0 = SEM SIMULADOR
-             1 = OBDSIM
-             2 = ECU Engine PRO
-"""
-_simulador = -1
-_debug = True
-_connection = None
+import threading
 
-executando_monitor = False
+from python_obd.obd import obd, OBDStatus
+from utils import *
 
 class Status:
     def __init__(self, MIL, qtd_erros, tipo_ignicao):
@@ -102,79 +88,3 @@ class ObdControl:
             self._connection = None
             log("OBDERROR: " + str(ex))  
             return json.dumps(dict(error =  str(ex)))
-
-
-def get_configs():
-        configs = None
-        try:
-            with io.open('./database/configs.txt', 'r') as f:
-                content = f.read()
-            if content is not None and content:
-                configs = json.loads(content, object_hook=lambda d: namedtuple('X', d.keys())(*d.values()))    
-        except IOError as ex:
-            if "No such file or directory" in str(ex):
-                configs = None
-            else:
-                raise ex
-        return configs
-
-def send_sms(numero, mensagem):
-        try:
-            account_sid = "AC932104250d2379654fc7b969cd1d700d"
-            auth_token  = "9f07c69be06f886c208be933e16b262b"
-
-            client = Client(account_sid, auth_token)
-
-            message = client.messages.create(
-                to=numero, 
-                from_="+16025669376",
-                body=mensagem)
-
-            log("SMS Enviada para %s | Mensagem: %s | SID: %s" % (numero, mensagem, message.sid))
-        except Exception as ex:
-            log("SMS ERROR: " + str(ex))
-
-def send_email(email, mensagem):
-    try:
-        server = smtplib.SMTP('smtp.gmail.com', 587)
-        server.ehlo()
-        server.starttls()
-        server.ehlo()
-        server.login("monitor.tcc2", "meumonitor")
-
-        msg = 'Subject: {}\n\n{}'.format('[Monitor Do Veiculo] IMPORTANTE!', mensagem) 
-
-        server.sendmail("monitor.tcc2@gmail.com", email, msg)
-
-        print("Email Enviado para %s | Mensagem: %s" % (email, mensagem))
-    except Exception as ex:
-        print("EMAIL ERROR: " + str(ex))  
-
-def log(message):
-    if get_debug():
-        print(message)
-
-def set_debug(debug):
-    global _debug
-    _debug = debug
-
-def get_debug():
-    global _debug
-    return _debug
-
-def set_simulador(simulador):
-    global _simulador
-    _simulador = simulador
-
-def get_simulador():
-    #se for -1 pesquisa nas configs
-    if _simulador == -1:
-        configs = get_configs()
-
-        #se nao tiver configs retorna sem simulador
-        if(configs is None):
-            return 0
-
-        return int(configs.simulador)
-    else:
-        return int(_simulador)
