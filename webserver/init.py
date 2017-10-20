@@ -81,6 +81,7 @@ def index():
 @app.route('/get_foto')
 def get_foto():
     camera = picamera.PiCamera()
+    camera.rotation = 270
     camera.capture('./fotos/image1.jpg')
     camera.close()
     with open("./fotos/image1.jpg", "rb") as image_file:
