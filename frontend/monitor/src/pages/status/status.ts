@@ -1,6 +1,5 @@
 import { Component } from '@angular/core';
 import { NavController, ToastController, LoadingController } from 'ionic-angular';
-import { Storage } from '@ionic/storage';
 import { AppSettings } from '../../app/app.settings';
 import { HttpService } from "../../app/http-service"
 
@@ -24,7 +23,6 @@ export class StatusPage {
     private httpService : HttpService,
     public loadingCtrl: LoadingController,
     private appSettings : AppSettings,
-    private storage: Storage, 
     private toastCtrl: ToastController) 
   {
     this.recuperar()

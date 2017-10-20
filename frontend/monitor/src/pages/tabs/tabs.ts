@@ -11,11 +11,11 @@ import { StatusPage } from '../status/status';
 })
 export class TabsPage {
 
-  tab1Root = FotosPage;
-  tab2Root = LocalizacaoPage;
-  tab3Root = SensoresPage;
-  tab4Root = StatusPage;
-  tab5Root = ConfiguracoesPage;
+  tab1Root = ConfiguracoesPage;
+  tab2Root = FotosPage;
+  tab3Root = LocalizacaoPage;
+  tab4Root = SensoresPage;
+  tab5Root = StatusPage;
 
   constructor() {
 

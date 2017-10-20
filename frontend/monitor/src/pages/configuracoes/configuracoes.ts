@@ -43,7 +43,7 @@ export class ConfiguracoesPage {
 
   public salvar(){
     let loader = this.loadingCtrl.create({
-      content: "Salvado..."
+      content: "Salvando..."
     });
     loader.present();
 
@@ -94,15 +94,37 @@ export class ConfiguracoesPage {
 
   public carregarConfiguracoesRemoit(){
     let loader = this.loadingCtrl.create({
-      content: "Buscando configurações..."
+      content: "Carregando proxy..."
     });
     loader.present();
 
     this.remoitService.getConfigs(this.configuracoes.remoit.user, this.configuracoes.remoit.senha).then(response => {
-      this.configuracoes.remoit = response;
-      this.storage.set("configuracoes", this.configuracoes);
-      AppSettings.TOAST(this.toastCtrl, null, 'Configurações carregadas!', 2000);
-      loader.dismiss();
+      var remoteConfigs = response;
+      this.configuracoes.remoit = remoteConfigs;
+
+      loader.setContent("Carregando configurações...");
+      this.storage.set("configuracoes", this.configuracoes).then(res =>{
+        this.appSettings.getEndpoint().then(endpoint => {
+          this.httpService.get(endpoint + 'get_configs').then(result => {
+            var configuracoes = result.json();
+            this.configuracoes = configuracoes;
+            this.configuracoes.endpoint = AppSettings.API_ENDPOINT_INIT;
+            this.configuracoes.remoit = remoteConfigs;
+            this.configuracoes.tipoConexao = 1;
+            this.storage.set("configuracoes", this.configuracoes);
+            AppSettings.TOAST(this.toastCtrl, null, 'Configurações carregadas!', 2000);
+            loader.dismiss();
+          }).catch(error =>{
+            console.log(error);
+            loader.dismiss();
+            AppSettings.TOAST(this.toastCtrl, 'ERROR', "Serviço fora do ar!", 2000);
+          });    
+        }).catch(error => {
+          AppSettings.TOAST(this.toastCtrl, 'ERROR', `Ops... ${error}`, 2000);
+          console.log(error);
+          loader.dismiss();
+        });      
+      });
     }).catch(error => {
       AppSettings.TOAST(this.toastCtrl, 'ERROR', `Ops... ${error}`, 2000);
       console.log(error);

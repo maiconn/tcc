@@ -1,6 +1,5 @@
 import { Component } from '@angular/core';
 import { NavController, ToastController, LoadingController } from 'ionic-angular';
-import { Storage } from '@ionic/storage';
 import { AppSettings } from '../../app/app.settings';
 import { HttpService } from "../../app/http-service"
 
@@ -17,7 +16,6 @@ export class SensoresPage {
   constructor(public navCtrl: NavController, 
               public loadingCtrl: LoadingController,
               private appSettings : AppSettings,
-              private storage: Storage, 
               private toastCtrl: ToastController,
               private httpService : HttpService) 
   {
@@ -47,25 +45,27 @@ export class SensoresPage {
       this.httpService.get(endpoint + 'get_obdii').then(result => {
         var list = result.json();
         if(list.error){
-          AppSettings.TOAST(this.toastCtrl, 'ERROR', list.error, 3000);
           this.lerSensores = false;
           this.list = [];
+          AppSettings.TOAST(this.toastCtrl, 'ERROR', list.error, 3000);
         } else if(this.lerSensores){
           this.list = list;
           this.monitorarSensores();
         }
         this.loader.dismiss();
       }).catch(error =>{
+        console.log(error);
         this.lerSensores = false;
-        console.log("ERROR: " + error);
-        AppSettings.TOAST(this.toastCtrl, 'ERROR', error, 3000);
+        this.list = [];
         this.loader.dismiss();
+        AppSettings.TOAST(this.toastCtrl, 'ERROR', error, 3000);
       });
     }).catch(error => {
+      console.log(error);
       this.lerSensores = false;
-      console.log("ERROR: " + error);
-      AppSettings.TOAST(this.toastCtrl, 'ERROR', error, 3000);
+      this.list = [];
       this.loader.dismiss();
+      AppSettings.TOAST(this.toastCtrl, 'ERROR', error, 3000);
     });
   }
 }
