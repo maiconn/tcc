@@ -105,13 +105,9 @@ class ObdControl:
 
     def _connect_obd(self):
         try:
-            if get_debug():
-                obd.logger.setLevel(obd.logging.DEBUG) 
-                self._connection = obd.OBD(baudrate=9600)
-                log("protocolo: " + self._connection.get_protocol_name())
-            else:
-                self._connection = obd.OBD()
-
+            obd.logger.setLevel(obd.logging.DEBUG) 
+            self._connection = obd.OBD(baudrate=9600,portstr='/dev/rfcomm0',fast=False)
+            log("protocolo: " + self._connection.get_protocol_name())
             if  self._connection.status() == OBDStatus.NOT_CONNECTED:
                 raise Exception("nao conectado com ELM237.")
 

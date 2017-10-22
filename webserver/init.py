@@ -24,10 +24,11 @@ def main(argv):
     _monitor = False
     _log = True
     _btMacAddr = None
+    _ignorar = False
     try:
-        opts, args = getopt.getopt(argv,"hd:s:m:l:a:",["help","simulador=","debug=","monitor=","log=","addr="])
+        opts, args = getopt.getopt(argv,"hd:s:m:l:a:i:",["help","simulador=","debug=","monitor=","log=","addr=","ignorar="])
     except getopt.GetoptError:
-        print('usage: init.py [-s simulador] [-d debug]  [-m monitor] [-l log] [-a addr]')
+        print('usage: init.py [-s simulador] [-d debug]  [-m monitor] [-l log] [-a addr] [-i ignorar]')
         sys.exit(2)
     
     for opt, arg in opts:
@@ -42,6 +43,7 @@ def main(argv):
             print("%s :   %s" % ("-m", "monitor dtc: 1- ativo, 0-inativo"))
             print("%s :   %s" % ("-l", "log em arquivo: 1- ativo, 0-inativo"))
             print("%s :   %s" % ("-a", "MAC addr Bluetooth ELM327 ex: -a 00:1D:A5:00:00:14"))
+            print("%s :   %s" % ("-i", "ignorar obd: 1-sim, 0-nao"))
             sys.exit(0)
             
         elif opt in ("-s", "--simulador"):
@@ -54,6 +56,8 @@ def main(argv):
             _log = int(arg) == 1
         elif opt in ("-a", "--addr"):
             _btMacAddr = int(arg)
+        elif opt in ("-i", "--ignorar"):
+            _ignorar = int(arg) == 1
 
     configurar_log(_log)
     set_debug(_debug)
@@ -63,27 +67,39 @@ def main(argv):
     log('  _monitor: '+ str(_monitor))
     log('      _log: '+ str(_log))
     log('_btMacAddr: '+ str(_btMacAddr))
+    log('  _ignorar: '+ str(_ignorar))
 
     config_pastas()
 
-    log("=> iniciando conexao bluetooth")
-    bluetooth_control = BluetoothControl()
-    if not bluetooth_control.configurar_bluetooth(_btMacAddr):
-        log('servidor nao iniciado, causa: bluetooth nao configurado corretamente.')
-        sys.exit(2)
-
-    log("=> iniciando conexao obd2")
-    try:
-        obd_control = ObdControl()
-    except Exception as ex:
-        log('servidor nao iniciado, causa: OBD2: %s.' % str(ex))
-        sys.exit(2)
+    if not _ignorar:
+        _connected = False
+        _tentativas = 1
+        _max_tentativas = 5
+        while not _connected:
+            log("====> iniciando conexoes [%so tentativa]" % str(_tentativas))
+            try:
+                log("=> iniciando conexao bluetooth")
+                bluetooth_control = BluetoothControl()
+                if not bluetooth_control.configurar_bluetooth(_btMacAddr):
+                    raise Exception('bluetooth nao configurado corretamente.')
+                
+                log("=> iniciando conexao obd2")
+                obd_control = ObdControl()
+                if _monitor:
+                    log("=> iniciando monitor obd")
+                    DTCControl(20, obd_control)
+                _connected = True
+            except Exception as ex:
+                log_error('BT_OBR_ERR: %s.' % str(ex))
+                if _tentativas >= _max_tentativas:
+                    log_error('servidor nao iniciado, causa: %s.' % str(ex))
+                    sys.exit(2)
+                _tentativas += 1
+    else:
+        log_warn("=> obd e bluetooth inativos")
 
     log("=> iniciando camera")
     my_camera = Camera()
-    
-    if _monitor:
-        DTCControl(20, obd_control)    
 
     app.run(debug=_debug, host='0.0.0.0', port=80, threaded=True)
     # app.run(debug=_debug, host='0.0.0.0', port=80)
@@ -92,13 +108,16 @@ def main(argv):
 def index():
     return json.dumps(dict(status =  "OK"))
 
+@app.errorhandler(Exception)
+def all_exception_handler(error):
+    log_exception(error)
+    return 'Error', 500
+
 @app.route('/get_foto')
 def get_foto():
     global my_camera
     my_stream = io.BytesIO()
-    encoded_string = ""
     encoded_string = base64.b64encode(my_camera.get_frame())
-        
     return 'data:image/jpeg;base64,' + encoded_string
 
 

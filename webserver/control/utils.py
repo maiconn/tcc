@@ -67,9 +67,17 @@ def log(message):
     global _rootLogger
     _rootLogger.info(message)
 
+def log_warn(message):
+    global _rootLogger
+    _rootLogger.warn(message)
+
 def log_error(message):
     global _rootLogger
     _rootLogger.error(message)
+
+def log_exception(ex):
+    global _rootLogger
+    _rootLogger.error(ex, exc_info=True)
 
 def config_pastas():
     if not os.path.exists("./database"):
