@@ -123,4 +123,37 @@ export class RemoitService {
             .toPromise();
         
     }
+
+    public getSSH(apikey: string, token: string){
+        return new Observable<any>(observer => {
+                const headerDict = {
+                    'content-type': 'application/json',
+                    'apikey': apikey,
+                    'token': token
+                    };                        
+                this.listAll(headerDict).then(retorno_listAll =>{
+                    console.log(retorno_listAll);
+                    if (retorno_listAll.status == 'true'){ 
+                        var servico = retorno_listAll.devices.filter(x => x.servicetitle == "SSH")[0];
+                        this.connect(servico.deviceaddress, headerDict).then(
+                            retorno_connect =>{
+                                console.log(retorno_connect);
+                                observer.next({
+                                    deviceaddress: servico.deviceaddress,
+                                    remoteIp: retorno_connect.connection.proxy
+                                });
+                                observer.complete();
+                            }).catch(error => {
+                                observer.error(error);
+                            });
+                    } else {
+                        observer.error(retorno_listAll.reason);
+                    }
+                }).catch(error => {
+                    observer.error(error);
+                });
+            })    
+            .map((response) => response)
+            .toPromise();
+    }
 }

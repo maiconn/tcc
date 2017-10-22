@@ -4,6 +4,8 @@ import { Storage } from '@ionic/storage';
 import { LoadingController } from 'ionic-angular';
 
 import { AppSettings } from '../../app/app.settings';
+import { SSHPage } from '../../pages/ssh/shh';
+
 import { RemoitService } from '../../app/remoteit-service';
 import { HttpService } from "../../app/http-service"
 
@@ -39,6 +41,11 @@ export class ConfiguracoesPage {
       console.log("ERROR DB: ", error);
     });
     
+  }
+
+  public showSSH(){
+    AppSettings.TOAST(this.toastCtrl, null, "Parabéns, você descobriu o brasil!", 3000);
+    this.navCtrl.push(SSHPage, {configuracoes: this.configuracoes});
   }
 
   public salvar(){

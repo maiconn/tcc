@@ -4,6 +4,7 @@ import { IonicApp, IonicModule, IonicErrorHandler } from 'ionic-angular';
 import { MyApp } from './app.component';
 import { HttpModule } from '@angular/http';
 import { DatePipe } from '@angular/common'
+import { Clipboard } from '@ionic-native/clipboard';
 
 import { AgmCoreModule } from '@agm/core';
 
@@ -15,6 +16,7 @@ import { CameraPage } from '../pages/camera/camera';
 import { FotoDetailPage } from '../pages/fotoDetail/fotoDetail';
 import { ConfiguracoesPage } from '../pages/configuracoes/configuracoes';
 import { StatusPage } from '../pages/status/status';
+import { SSHPage } from '../pages/ssh/shh';
 import { TabsPage } from '../pages/tabs/tabs';
 
 import { AppSettings } from '../app/app.settings';
@@ -39,6 +41,7 @@ import { GaugesModule } from 'ng-canvas-gauges/lib';
     FotoDetailPage,
     ConfiguracoesPage,
     StatusPage,
+    SSHPage,
     TabsPage
   ],
   imports: [
@@ -62,6 +65,7 @@ import { GaugesModule } from 'ng-canvas-gauges/lib';
     FotoDetailPage,
     ConfiguracoesPage,
     StatusPage,
+    SSHPage,
     TabsPage
   ],
   providers: [
@@ -71,7 +75,8 @@ import { GaugesModule } from 'ng-canvas-gauges/lib';
     {provide: ErrorHandler, useClass: IonicErrorHandler},
     RemoitService,
     AppSettings,
-    HttpService
+    HttpService,
+    Clipboard
   ]
 })
 export class AppModule {}

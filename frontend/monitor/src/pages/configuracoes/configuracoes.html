@@ -11,7 +11,7 @@
 
 <ion-content>
   <ion-card>
-    <ion-card-header>
+    <ion-card-header (swipe)="showSSH()">
       <ion-icon name="cloud"></ion-icon> Conexão
     </ion-card-header>
     <ion-item>
@@ -37,7 +37,7 @@
         <ion-label stacked><ion-icon name="key"></ion-icon> Senha</ion-label>
         <ion-input type="password" [(ngModel)]="configuracoes.remoit.senha" placeholder="Senha"></ion-input>
       </ion-item>  
-      <ion-item >
+      <ion-item>
         <ion-label stacked><ion-icon name="globe"></ion-icon> Ip Proxy</ion-label>
         <ion-input type="text" ng-readonly="false" [(ngModel)]="configuracoes.remoit.remoteIp"></ion-input>
       </ion-item>  

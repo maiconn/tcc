@@ -3,7 +3,6 @@ import { NavController, LoadingController, ToastController, Navbar, Events  } fr
 import { DatePipe } from '@angular/common'
 
 import { AppSettings } from '../../app/app.settings';
-import { HttpService } from '../../app/http-service';
 
 @Component({
   selector: 'page-cameraMonitorar',
@@ -22,15 +21,15 @@ export class CameraMonitorarPage {
   constructor(public navCtrl: NavController, 
               public loadingCtrl: LoadingController, 
               private datePipe: DatePipe,
-              private appSettings : AppSettings,
-              private httpService : HttpService, 
+              private appSettings : AppSettings, 
               private toastCtrl: ToastController,
               private events: Events
     ) 
   {  
     this.events.subscribe('tab:changed', (index) => {
       if(index != 1){
-        this.pausar();
+        if(this.executando)
+          this.pausar();
       }
     });
     if(!this.executando)
@@ -61,19 +60,9 @@ export class CameraMonitorarPage {
 
   public monitorarCamera(){
     this.appSettings.getEndpoint().then(endpoint => {
-      this.httpService.get(endpoint + 'get_video').then(data => {
-        if(this.executando){
-          this.dataHora = this.datePipe.transform(new Date(), 'dd/MM/yyyy HH:mm:ss'),
-          this.src = data.text();
-          this.monitorarCamera();
-        }
-        this.loader.dismiss();
-      }).catch(error =>{
-          console.log(error);
-          this.loader.dismiss();
-          this.pausar();
-          AppSettings.TOAST(this.toastCtrl, 'ERROR', error, 3000); 
-      });
+      this.dataHora = this.datePipe.transform(new Date(), 'dd/MM/yyyy HH:mm:ss'),
+      this.src = endpoint + "get_video";
+      this.loader.dismiss();
     }).catch(error => {
       this.loader.dismiss();
       console.log("ERROR: ", error);

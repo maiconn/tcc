@@ -1,0 +1,21 @@
+<ion-header>
+  <ion-navbar>
+    <ion-title><ion-icon name="flash" larger></ion-icon> Conexão SSH</ion-title>
+  </ion-navbar>
+</ion-header>
+
+<ion-content>
+  <ion-card>
+    <ion-list>
+      <ion-item>
+        <ion-label stacked><ion-icon name="key"></ion-icon> Senha</ion-label>
+        <ion-input #minhaSenha type="password"  [(ngModel)]="senha" placeholder="Senha" (keyup.enter)="exibirConfigs()"></ion-input>
+      </ion-item>  
+      <button ion-button block (click)="exibirConfigs()">Exibir Configurações</button>
+    </ion-list>
+    <ion-item [hidden]="!ehParaExibir">
+      <ion-label stacked><ion-icon name="globe"></ion-icon> SSH: </ion-label>
+      <ion-input #meuSSH type="text" ng-readonly="false" [(ngModel)]="ssh"></ion-input>
+    </ion-item>
+  </ion-card>
+</ion-content>

@@ -10,12 +10,14 @@ import 'rxjs/add/operator/toPromise';
 @Injectable()
 export class AppSettings {
     public static DEFAULT_TIMEOUT: number = 30000;
-    public static API_ENDPOINT_INIT = 'http://192.168.0.23/';
+    // public static API_ENDPOINT_INIT = 'http://192.168.0.23/';
+    public static API_ENDPOINT_INIT = 'http://monitor-tcc2.ddns.net:85/';
+
     public static REMOT3_USER = "maicon.gerardi@gmail.com";
     public static REMOT3_PASS = "5158126";
 
     public static DEFAULT_CONFIGURATIONS = { 
-        tipoConexao: 1, 
+        tipoConexao: 0, 
         endpoint: AppSettings.API_ENDPOINT_INIT,
         email: '',
         celular: '',
