@@ -1,7 +1,8 @@
 from datetime import datetime, timedelta
 from threading import Timer
 from collections import namedtuple
-from utils import log
+from utils import *
+from python_obd.obd import obd
 import pdb
 
 class DTCControl:
@@ -34,11 +35,8 @@ class DTCControl:
             if configs is None:
                 raise Exception("Sem configuracoes...")
 
-            connection = self.obd_control.get_connection()
-            if not isinstance(connection, obd.OBD):
-                raise Exception("Sem conexao obd2... " + str(connection))
-
-            dtcs = self.obd_control.get_status_dtc(connection)
+            dtcs = self.obd_control.get_status_dtc()
+            
             log("dtcs_capturados: %s" % (str(dtcs.json_dump())))
             
             db_status = self.get_db_status()

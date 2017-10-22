@@ -74,9 +74,6 @@ def log_error(message):
 def config_pastas():
     if not os.path.exists("./database"):
         os.mkdir("./database", 0777)
-    
-    if not os.path.exists("./fotos"):
-        os.mkdir("./fotos", 0777)
 
     if not os.path.exists("./log"):
         os.mkdir("./log", 0777)

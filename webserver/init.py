@@ -1,21 +1,25 @@
 import picamera, base64, serial, io, pdb, sys, getopt, numbers, time
 
-from flask import Flask, jsonify, request, json
+from flask import Flask, jsonify, request, json, Response
 from flask_cors import CORS
 from control.python_obd.obd import obd
 from control.utils import *
 from control.obd_control import ObdControl
 from control.dtc_control import DTCControl
 from control.bluetooth_control import BluetoothControl
+
+from video_streaming.camera_pi import Camera
     
 app = Flask(__name__)
 CORS(app)
 
 obd_control = None
 bluetooth_control = None
+my_camera = None
 
 def main(argv):
     global obd_control
+    global my_camera
     _debug = True
     _monitor = False
     _log = True
@@ -74,6 +78,9 @@ def main(argv):
     except Exception as ex:
         log('servidor nao iniciado, causa: OBD2: %s.' % str(ex))
         sys.exit(2)
+
+    log("=> iniciando camera")
+    my_camera = Camera()
     
     if _monitor:
         DTCControl(20, obd_control)    
@@ -87,30 +94,26 @@ def index():
 
 @app.route('/get_foto')
 def get_foto():
+    global my_camera
     my_stream = io.BytesIO()
     encoded_string = ""
-    with picamera.PiCamera() as camera:
-        # camera.rotation = 270
-        camera.start_preview()
-        time.sleep(2)
-        camera.capture(my_stream, 'jpeg')
-        my_stream.seek(0)
-        encoded_string = base64.b64encode(my_stream.read())
+    encoded_string = base64.b64encode(my_camera.get_frame())
         
     return 'data:image/jpeg;base64,' + encoded_string
 
+
+def gen(camera):
+    """Video streaming generator function."""
+    while True:
+        frame = camera.get_frame()
+        yield (b'--frame\r\n'
+               b'Content-Type: image/jpeg\r\n\r\n' + frame + b'\r\n')
+
 @app.route('/get_video')
-def get_foto():
-    my_stream = io.BytesIO()
-    encoded_string = ""
-    with picamera.PiCamera() as camera:
-        camera.resolution = (160, 120)
-        camera.start_preview()
-        camera.capture(my_stream, 'jpeg')
-        my_stream.seek(0)
-        encoded_string = base64.b64encode(my_stream.read())
-        
-    return 'data:image/jpeg;base64,' + encoded_string
+def get_video():
+    global my_camera
+    return Response(gen(my_camera),
+                    mimetype='multipart/x-mixed-replace; boundary=frame')
 
 @app.route('/get_gps')
 def get_gps():
@@ -212,8 +215,6 @@ def get_dtc():
     except Exception as ex:
         log_error(str(ex))
         return json.dumps(dict(error = str(ex)))
-
-    
 
 @app.route('/save_configs', methods=['POST'])
 def save_configs():
