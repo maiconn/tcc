@@ -1,0 +1,57 @@
+<ion-header>
+    <ion-navbar>
+      <ion-title>Status do Veículo</ion-title>
+      <ion-buttons end>
+        <button ion-button icon-only (click)="recuperar()">
+          <ion-icon name="refresh"></ion-icon>
+        </button>
+      </ion-buttons>
+    </ion-navbar>
+  </ion-header>
+  
+  <ion-content>
+    <ion-card *ngIf="statusDtc.status != null">
+        <ion-card-header>
+          <b><ion-icon name="build"></ion-icon> Geral</b>
+        </ion-card-header>
+        <ion-list>
+          <ion-item>
+            <ion-icon name="bulb" item-start large></ion-icon>
+            <h2>{{statusDtc.status.MIL == true ? 'Ligada' : 'Desligada'}}</h2>
+            <p>Malfunction Indicator Lamp</p>
+          </ion-item>
+          <ion-item>
+            <ion-icon name="information-circle" item-start large></ion-icon>
+            <h2>{{statusDtc.status.qtd_erros}}</h2>
+            <p>Diagnostic Trouble Codes</p>
+          </ion-item>
+        </ion-list>        
+    </ion-card>
+
+    <ion-card *ngIf="statusDtc.dtc_pendentes.length > 0">
+        <ion-card-header>
+          <b>Códigos Pendentes</b>
+        </ion-card-header>
+        <ion-list>
+          <ion-item *ngFor="let dtc of statusDtc.dtc_pendentes">
+            <ion-icon name="warning" item-start large></ion-icon>
+            <h2><a href="#" (click)="openURL(dtc.url)">{{dtc.codigo}}</a></h2>
+            <p style="white-space: pre-wrap;">{{dtc.descricao}}</p>
+          </ion-item>
+        </ion-list>        
+    </ion-card>
+
+    <ion-card *ngIf="statusDtc.dtc_registrados.length > 0">
+        <ion-card-header>
+          <b>Códigos Registrados</b>
+        </ion-card-header>
+        <ion-list>
+          <ion-item *ngFor="let dtc of statusDtc.dtc_registrados">
+            <ion-icon name="warning" item-start large></ion-icon>
+            <h2><a target="_blank" href="{{dtc.url}}">{{dtc.codigo}}</a></h2>
+            <p style="white-space: pre-wrap;">{{dtc.descricao}}</p>
+          </ion-item>
+        </ion-list>        
+    </ion-card>
+  </ion-content>
+  

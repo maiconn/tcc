@@ -1,6 +1,6 @@
-<ion-tabs>
+<ion-tabs (ionChange)="tabChange($event)">
   <ion-tab [root]="tab1Root" tabTitle="Configs" tabIcon="options"></ion-tab>
-  <ion-tab [root]="tab2Root" tabTitle="Fotos" tabIcon="camera"></ion-tab>
+  <ion-tab [root]="tab2Root" tabTitle="Câmera" tabIcon="camera"></ion-tab>
   <ion-tab [root]="tab3Root" tabTitle="Locais" tabIcon="locate"></ion-tab>
   <ion-tab [root]="tab4Root" tabTitle="Sensores" tabIcon="speedometer"></ion-tab>
   <ion-tab [root]="tab5Root" tabTitle="Status" tabIcon="build"></ion-tab>

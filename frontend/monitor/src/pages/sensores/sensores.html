@@ -1,11 +1,12 @@
 <ion-header>
   <ion-navbar>
-    <ion-title>Sensores</ion-title>
+    <ion-title>Sensores <ion-icon name="sad" [hidden]="lerSensores"></ion-icon> 
+                        <ion-icon name="happy" [hidden]="!lerSensores"></ion-icon></ion-title>
     <ion-buttons end>
       <button ion-button icon-only (click)="pausar()" [disabled]="!lerSensores">
         <ion-icon name="pause"></ion-icon>
       </button>
-      <button ion-button icon-only (click)="reconectar()" [disabled]="lerSensores">
+      <button ion-button icon-only (click)="recarregar()" [disabled]="lerSensores">
         <ion-icon name="refresh"></ion-icon>
       </button>
     </ion-buttons>
@@ -13,23 +14,118 @@
 </ion-header>
 
 <ion-content>
-  <ion-grid>
-    <ion-row>
-        <ion-col col-6 col-sm-6 col-md-6 col-lg-6 col-xl-6 *ngFor="let sensor of list">
-            <span style="font-size:1.2em;">
-                <ion-icon name="speedometer" *ngIf="sensor.unidade == 'kph'" larger></ion-icon>
-                <ion-icon name="thermometer" *ngIf="sensor.unidade == 'degC'" larger></ion-icon>
-                <ion-icon name="timer" *ngIf="sensor.unidade == 'rpm'" larger></ion-icon>
-                <ion-icon name="flash" *ngIf="sensor.unidade == 'volt'" larger></ion-icon>
-                <ion-icon name="clock" *ngIf="sensor.unidade == 'second'" larger></ion-icon>
-                <ion-icon name="pie" *ngIf="sensor.unidade == 'percent'" larger></ion-icon>
-                <ion-icon name="pint" *ngIf="sensor.unidade == 'lph'" larger></ion-icon>
-                <ion-icon name="outlet" *ngIf="sensor.codigo == '011C'" larger></ion-icon>
-                <ion-icon name="outlet" *ngIf="sensor.codigo == 'ATI'" larger></ion-icon>
-
-                <b>{{sensor.valor}}</b> {{sensor.unidade}}</span> <br>
-            {{sensor.sensor}}
-        </ion-col>
-    </ion-row>
-  </ion-grid>
+  <ion-card *ngFor="let sensor of pids" text-center>
+    <ion-card-header>
+      <span style="font-size:1.2em;">
+        <ion-icon name="speedometer" *ngIf="sensor.unidade == 'kph'" larger></ion-icon>
+        <ion-icon name="thermometer" *ngIf="sensor.unidade == 'degC'" larger></ion-icon>
+        <ion-icon name="timer" *ngIf="sensor.unidade == 'rpm'" larger></ion-icon>
+        <ion-icon name="flash" *ngIf="sensor.unidade == 'volt'" larger></ion-icon>
+        <ion-icon name="clock" *ngIf="sensor.unidade == 'second'" larger></ion-icon>
+        <ion-icon name="pie" *ngIf="sensor.unidade == 'percent'" larger></ion-icon>
+        <ion-icon name="pint" *ngIf="sensor.unidade == 'lph'" larger></ion-icon>
+        <ion-icon name="outlet" *ngIf="sensor.codigo == '011C'" larger></ion-icon>
+        <ion-icon name="outlet" *ngIf="sensor.codigo == 'ATI'" larger></ion-icon>
+      </span>{{sensor.sensor}}
+    </ion-card-header>
+    <span  class="center">
+      <b>{{sensor.valor}}</b> {{sensor.unidade}}<br/>
+      <radial-gauge *ngIf="sensor.unidade == 'kph'"
+        width="250"
+        height="250"
+        units="Km/h"
+        min-value="0"
+        start-angle="90"
+        ticks-angle="180"
+        value-box="false"
+        max-value="220"
+        major-ticks="0,20,40,60,80,100,120,140,160,180,200,220"
+        minor-ticks="2"
+        stroke-ticks="true"
+        highlights='[
+          {"from": 160, "to": 220, "color": "rgba(200, 50, 50, .75)"}
+        ]'
+        color-plate="#fff"
+        border-shadow-width="0"
+        borders="false"
+        needle-type="arrow"
+        needle-width="2"
+        needle-circle-size="7"
+        needle-circle-outer="true"
+        needle-circle-inner="false"
+        animation-duration="1500"
+        animation-rule="linear"
+        [attr.value]="sensor.valor">
+      </radial-gauge>
+      <radial-gauge width="250" *ngIf="sensor.unidade == 'degC'"
+        height="250"
+        units="°C"
+        title="Temperatura"
+        min-value="0"
+        value-box="false"
+        max-value="140"
+        major-ticks="[0,20,40,60,80,100,120,140]"
+        minor-ticks="2"
+        stroke-ticks="true"
+        highlights='[ {"from": 0, "to": 40, "color": "rgba(0,0, 255, .3)"},
+          {"from": 120, "to": 140, "color": "rgba(255, 0, 0, .3)"} ]'
+        ticks-angle="225"
+        start-angle="67.5"
+        color-major-ticks="#ddd"
+        color-minor-ticks="#ddd"
+        color-title="#eee"
+        color-units="#ccc"
+        color-numbers="#eee"
+        color-plate="#222"
+        border-shadow-width="0"
+        borders="true"
+        needle-type="arrow"
+        needle-width="2"
+        needle-circle-size="7"
+        needle-circle-outer="true"
+        needle-circle-inner="false"
+        animation-duration="1500"
+        animation-rule="linear"
+        color-border-outer="#333"
+        color-border-outer-end="#111"
+        color-border-middle="#222"
+        color-border-middle-end="#111"
+        color-border-inner="#111"
+        color-border-inner-end="#333"
+        color-needle-shadow-down="#333"
+        color-needle-circle-outer="#333"
+        color-needle-circle-outer-end="#111"
+        color-needle-circle-inner="#111"
+        color-needle-circle-inner-end="#222"
+        value-box-border-radius="0"
+        color-value-box-rect="#222"
+        color-value-box-rect-end="#333"
+        [attr.value]="sensor.valor">
+      </radial-gauge>
+      <radial-gauge width="250" *ngIf="sensor.unidade == 'rpm'"
+        height="250"
+        units="RPM"
+        min-value="0"
+        max-value="11"
+        major-ticks="0,1,2,3,4,5,6,7,8,9,10,11"
+        minor-ticks="2"
+        stroke-ticks="true"
+        value-box="false"
+        highlights='[
+          {"from": 7, "to": 11, "color": "rgba(200, 50, 50, .75)"}
+        ]'
+        color-plate="#fff"
+        border-shadow-width="0"
+        borders="false"
+        needle-type="arrow"
+        needle-width="2"
+        needle-circle-size="7"
+        needle-circle-outer="true"
+        needle-circle-inner="false"
+        animation-duration="1500"
+        animation-rule="linear"
+        [attr.value]="sensor.valor/1000">
+      </radial-gauge>
+    </span>
+  </ion-card>
 </ion-content>

@@ -1,0 +1,35 @@
+<ion-header>
+  <ion-navbar>
+    <ion-title>Sensores</ion-title>
+    <ion-buttons end>
+      <button ion-button icon-only (click)="pausar()" [disabled]="!lerSensores">
+        <ion-icon name="pause"></ion-icon>
+      </button>
+      <button ion-button icon-only (click)="reconectar()" [disabled]="lerSensores">
+        <ion-icon name="refresh"></ion-icon>
+      </button>
+    </ion-buttons>
+  </ion-navbar>
+</ion-header>
+
+<ion-content>
+  <ion-grid>
+    <ion-row>
+        <ion-col col-6 col-sm-6 col-md-6 col-lg-6 col-xl-6 *ngFor="let sensor of list">
+            <span style="font-size:1.2em;">
+                <ion-icon name="speedometer" *ngIf="sensor.unidade == 'kph'" larger></ion-icon>
+                <ion-icon name="thermometer" *ngIf="sensor.unidade == 'degC'" larger></ion-icon>
+                <ion-icon name="timer" *ngIf="sensor.unidade == 'rpm'" larger></ion-icon>
+                <ion-icon name="flash" *ngIf="sensor.unidade == 'volt'" larger></ion-icon>
+                <ion-icon name="clock" *ngIf="sensor.unidade == 'second'" larger></ion-icon>
+                <ion-icon name="pie" *ngIf="sensor.unidade == 'percent'" larger></ion-icon>
+                <ion-icon name="pint" *ngIf="sensor.unidade == 'lph'" larger></ion-icon>
+                <ion-icon name="outlet" *ngIf="sensor.codigo == '011C'" larger></ion-icon>
+                <ion-icon name="outlet" *ngIf="sensor.codigo == 'ATI'" larger></ion-icon>
+
+                <b>{{sensor.valor}}</b> {{sensor.unidade}}</span> <br>
+            {{sensor.sensor}}
+        </ion-col>
+    </ion-row>
+  </ion-grid>
+</ion-content>

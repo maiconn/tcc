@@ -40,7 +40,7 @@ export class AppSettings {
         deviceaddress: '',
         remoteIp: ''
     }
-
+    
     constructor(private storage: Storage){
         
     }

@@ -1,8 +1,10 @@
 import { Component } from '@angular/core';
 
+import { Tab, Events } from 'ionic-angular';
+
 import { LocalizacaoPage } from '../localizacao/localizacao';
 import { SensoresPage } from '../sensores/sensores';
-import { FotosPage } from '../fotos/fotos';
+import { CameraPage } from '../camera/camera';
 import { ConfiguracoesPage } from '../configuracoes/configuracoes';
 import { StatusPage } from '../status/status';
 
@@ -12,12 +14,14 @@ import { StatusPage } from '../status/status';
 export class TabsPage {
 
   tab1Root = ConfiguracoesPage;
-  tab2Root = FotosPage;
+  tab2Root = CameraPage;
   tab3Root = LocalizacaoPage;
   tab4Root = SensoresPage;
   tab5Root = StatusPage;
 
-  constructor() {
+  constructor(private events: Events) { }
 
+  tabChange(tab: Tab){
+    this.events.publish('tab:changed', tab.index);
   }
 }

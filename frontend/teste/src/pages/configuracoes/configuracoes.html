@@ -1,0 +1,94 @@
+<ion-header>
+  <ion-navbar>
+    <ion-title>Configurações</ion-title>
+    <ion-buttons end>
+      <button ion-button icon-only (click)="salvar()">
+        <ion-icon name="checkmark"></ion-icon>
+      </button>
+    </ion-buttons>
+  </ion-navbar>
+</ion-header>
+
+<ion-content>
+  <ion-card>
+    <ion-card-header>
+      <ion-icon name="cloud"></ion-icon> Conexão
+    </ion-card-header>
+    <ion-item>
+      <ion-label stacked><ion-icon name="git-compare"></ion-icon> Tipo de Conexão</ion-label>
+      <ion-select [(ngModel)]="configuracoes.tipoConexao">
+        <ion-option value="1">Proxy Remot3.it</ion-option>
+        <ion-option value="0">Endpoint</ion-option>
+      </ion-select>
+    </ion-item>
+    <ion-list [hidden]="configuracoes.tipoConexao != '0'" >
+      <ion-item>
+        <ion-label stacked>Endpoint</ion-label>
+        <ion-input type="text" [(ngModel)]="configuracoes.endpoint" placeholder="Endpoint"></ion-input>
+      </ion-item>
+      <button ion-button block (click)="carregarConfiguracoesEndpoint()">Carregar Configurações</button>  
+    </ion-list>
+    <ion-list [hidden]="configuracoes.tipoConexao != '1'">
+      <ion-item hidden="hidden">
+        <ion-label stacked><ion-icon name="contact"></ion-icon> Usuário</ion-label>
+        <ion-input type="text" [(ngModel)]="configuracoes.remoit.user" placeholder="Usuário"></ion-input>
+      </ion-item>
+      <ion-item hidden="hidden">
+        <ion-label stacked><ion-icon name="key"></ion-icon> Senha</ion-label>
+        <ion-input type="password" [(ngModel)]="configuracoes.remoit.senha" placeholder="Senha"></ion-input>
+      </ion-item>  
+      <ion-item >
+        <ion-label stacked><ion-icon name="globe"></ion-icon> Ip Proxy</ion-label>
+        <ion-input type="text" ng-readonly="false" [(ngModel)]="configuracoes.remoit.remoteIp"></ion-input>
+      </ion-item>  
+      <button ion-button block (click)="carregarConfiguracoesRemoit()">Carregar Configurações</button>
+    </ion-list>
+  </ion-card>
+  <ion-card>
+    <ion-card-header>
+      <ion-icon name="build"></ion-icon> Geral
+    </ion-card-header>
+    <ion-list>
+      <ion-item>
+        <ion-label stacked><ion-icon name="flask"></ion-icon> Tipo de Simulação</ion-label>
+        <ion-select [(ngModel)]="configuracoes.simulador">
+          <ion-option value="0">Sem simulador</ion-option>
+          <ion-option value="1">OBDsim</ion-option>
+          <ion-option value="2">ECU Engine Pro</ion-option>
+        </ion-select>
+      </ion-item>
+    </ion-list>
+  </ion-card>
+
+  <ion-card>
+    <ion-card-header>
+      <ion-icon name="person"></ion-icon> Dados Pessoais
+    </ion-card-header>
+    <ion-list>
+      <ion-item>
+        <ion-label stacked><ion-icon name="mail"></ion-icon> E-mail</ion-label>
+        <ion-input type="email" [(ngModel)]="configuracoes.email" placeholder="E-mail"></ion-input>
+      </ion-item>
+      <ion-item>
+        <ion-label stacked><ion-icon name="call"></ion-icon> Celular</ion-label>
+        <ion-input type="tel" [(ngModel)]="configuracoes.celular" placeholder="Celular"></ion-input>
+      </ion-item>
+    </ion-list>
+  </ion-card>
+  
+  <ion-card>
+    <ion-card-header>
+      <ion-icon name="notifications"></ion-icon> Notificações
+    </ion-card-header>
+    <ion-list>
+      <ion-item>
+        <ion-label>Notificar DTC via E-mail</ion-label>
+        <ion-checkbox [(ngModel)]="configuracoes.notificarEmail"></ion-checkbox>
+      </ion-item>
+      <ion-item>
+        <ion-label>Notificar DTC via SMS</ion-label>
+        <ion-checkbox [(ngModel)]="configuracoes.notificarSMS"></ion-checkbox>
+      </ion-item>
+    </ion-list>
+  </ion-card>
+</ion-content>

@@ -10,11 +10,13 @@ import { AgmCoreModule } from '@agm/core';
 import { LocalizacaoPage } from '../pages/localizacao/localizacao';
 import { LocalizacaoDetailPage } from '../pages/localizacaoDetail/localizacaoDetail';
 import { SensoresPage } from '../pages/sensores/sensores';
-import { FotosPage } from '../pages/fotos/fotos';
+import { CameraMonitorarPage } from '../pages/cameraMonitorar/cameraMonitorar';
+import { CameraPage } from '../pages/camera/camera';
 import { FotoDetailPage } from '../pages/fotoDetail/fotoDetail';
 import { ConfiguracoesPage } from '../pages/configuracoes/configuracoes';
 import { StatusPage } from '../pages/status/status';
 import { TabsPage } from '../pages/tabs/tabs';
+
 import { AppSettings } from '../app/app.settings';
 import { HttpService } from '../app/http-service';
 
@@ -24,13 +26,16 @@ import { StatusBar } from '@ionic-native/status-bar';
 import { SplashScreen } from '@ionic-native/splash-screen';
 import { IonicStorageModule } from '@ionic/storage';
 
+import { GaugesModule } from 'ng-canvas-gauges/lib';
+
 @NgModule({
   declarations: [
     MyApp,
     LocalizacaoPage,
     LocalizacaoDetailPage,
     SensoresPage,
-    FotosPage,
+    CameraMonitorarPage,
+    CameraPage,
     FotoDetailPage,
     ConfiguracoesPage,
     StatusPage,
@@ -43,7 +48,8 @@ import { IonicStorageModule } from '@ionic/storage';
     AgmCoreModule.forRoot({
       apiKey: 'AIzaSyDdj6ktEhIiqI67yFYy6UCrz1kcQProAuc'
     }),
-    IonicStorageModule.forRoot()
+    IonicStorageModule.forRoot(),
+    GaugesModule
   ],
   bootstrap: [IonicApp],
   entryComponents: [
@@ -51,7 +57,8 @@ import { IonicStorageModule } from '@ionic/storage';
     LocalizacaoPage,
     LocalizacaoDetailPage,
     SensoresPage,
-    FotosPage,
+    CameraMonitorarPage,
+    CameraPage,
     FotoDetailPage,
     ConfiguracoesPage,
     StatusPage,
