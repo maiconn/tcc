@@ -1,4 +1,4 @@
-import picamera, base64, serial, io, pdb, sys, getopt, numbers
+import picamera, base64, serial, io, pdb, sys, getopt, numbers, time
 
 from flask import Flask, jsonify, request, json
 from flask_cors import CORS
@@ -62,17 +62,24 @@ def main(argv):
 
     config_pastas()
 
+    log("=> iniciando conexao bluetooth")
     bluetooth_control = BluetoothControl()
     if not bluetooth_control.configurar_bluetooth(_btMacAddr):
         log('servidor nao iniciado, causa: bluetooth nao configurado corretamente.')
         sys.exit(2)
 
-    obd_control = ObdControl()
+    log("=> iniciando conexao obd2")
+    try:
+        obd_control = ObdControl()
+    except Exception as ex:
+        log('servidor nao iniciado, causa: OBD2: %s.' % str(ex))
+        sys.exit(2)
     
     if _monitor:
         DTCControl(20, obd_control)    
 
-    app.run(debug=_debug, host='0.0.0.0', port=80)
+    app.run(debug=_debug, host='0.0.0.0', port=80, threaded=True)
+    # app.run(debug=_debug, host='0.0.0.0', port=80)
 
 @app.route('/')
 def index():
@@ -80,12 +87,29 @@ def index():
 
 @app.route('/get_foto')
 def get_foto():
-    camera = picamera.PiCamera()
-    camera.rotation = 270
-    camera.capture('./fotos/image1.jpg')
-    camera.close()
-    with open("./fotos/image1.jpg", "rb") as image_file:
-        encoded_string = base64.b64encode(image_file.read())
+    my_stream = io.BytesIO()
+    encoded_string = ""
+    with picamera.PiCamera() as camera:
+        # camera.rotation = 270
+        camera.start_preview()
+        time.sleep(2)
+        camera.capture(my_stream, 'jpeg')
+        my_stream.seek(0)
+        encoded_string = base64.b64encode(my_stream.read())
+        
+    return 'data:image/jpeg;base64,' + encoded_string
+
+@app.route('/get_video')
+def get_foto():
+    my_stream = io.BytesIO()
+    encoded_string = ""
+    with picamera.PiCamera() as camera:
+        camera.resolution = (160, 120)
+        camera.start_preview()
+        camera.capture(my_stream, 'jpeg')
+        my_stream.seek(0)
+        encoded_string = base64.b64encode(my_stream.read())
+        
     return 'data:image/jpeg;base64,' + encoded_string
 
 @app.route('/get_gps')
@@ -127,35 +151,39 @@ def get_gps():
 
     return json.dumps(dict(error =  "Sem Dados na porta /dev/serial0"))
 
-@app.route('/get_obdii')
-def get_obdii():
+@app.route('/get_obdii_pids')
+def get_obdii_pids():
     global obd_control
-    connection = obd_control.get_connection()
-    if not isinstance(connection, obd.OBD):
-        log_error(str(connection))
-        return connection
-
-    listSensors = []
-    
-    for command in connection.get_supported_commands():
-        if command.command not in [ b"03", 
-                                    b"07", 
-                                    b"04", 
-                                    b"0100", 
-                                    b"0120", 
-                                    b"0140",
-                                    b"0600",
-                                    b"0620",
-                                    b"0640",
-                                    b"0660",
-                                    b"0680",
-                                    b"06A0",
-                                    b"0101" ]: 
+    try:
+        listPids = []
+        for command in obd_control.get_supported_pids():
             cmd = command
-            response = obd_control.execute_query(connection, cmd)
+            response = obd_control.execute_query(cmd)
+            unidade = ""
+            try:
+                unidade = str(response.value.u)
+            except AttributeError:
+                unidade = ""
+            listPids.append(dict(sensor=str(cmd.desc),
+                                 unidade=unidade, 
+                                 codigo=str(cmd.command),
+                                 valor="0"))
+        return json.dumps(sorted(listPids, key=lambda s: s.get('codigo')))
+    except Exception as ex:
+        log_error(str(ex))
+        return json.dumps(dict(error = str(ex)))
+
+@app.route('/get_obdii_values')
+def get_obdii_values():
+    global obd_control
+    try:
+        listSensors = []
+        
+        for command in obd_control.get_supported_pids():
+            cmd = command
+            response = obd_control.execute_query(cmd)
 
             valor = ""
-            unidade = ""
             try:
                 valor = response.value.magnitude
                 if isinstance(valor, numbers.Real):
@@ -163,30 +191,29 @@ def get_obdii():
                         valor = int(valor)
                     else:
                         valor = str(float(str("%.4f" % round(valor,4))))
-
                 else:
                     valor = str(valor)
-                unidade = str(response.value.u)
             except AttributeError:
                 valor = response.value
-                unidade = ""
-            listSensors.append(dict(sensor=str(cmd.desc), 
-                                    valor=str(valor), 
-                                    unidade=unidade, 
-                                    codigo=str(cmd.command)))
+            listSensors.append(dict(codigo=str(cmd.command),
+                                    valor=str(valor)))
 
-    return json.dumps(sorted(listSensors, key=lambda s: s.get('codigo')))
+        return json.dumps(sorted(listSensors, key=lambda s: s.get('codigo')))
+    except Exception as ex:
+        log_error(str(ex))
+        return json.dumps(dict(error = str(ex)))
 
 @app.route('/get_dtc')
 def get_dtc():
     # pdb.set_trace()
     global obd_control
-    connection = obd_control.get_connection()
-    if not isinstance(connection, obd.OBD):
-        log_error(str(connection))
-        return connection
+    try:
+        return json.dumps(obd_control.get_status_dtc().json_dump())
+    except Exception as ex:
+        log_error(str(ex))
+        return json.dumps(dict(error = str(ex)))
 
-    return json.dumps(obd_control.get_status_dtc(connection).json_dump())
+    
 
 @app.route('/save_configs', methods=['POST'])
 def save_configs():

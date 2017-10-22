@@ -27,15 +27,21 @@ class StatusDTC:
 class ObdControl:
     _lock_comandos = threading.Lock()
     _lock_connection = threading.Lock()
+    _supported_pids = None
+    _connection = None
 
-    def __init__(self):
-        self._connection = None
+    def __init__(self, initObd=True):
+        if initObd:
+            self._connection = self.get_connection()
+            self._supported_pids = self.get_supported_pids()
 
-    def execute_query(self, connection, cmd):
+    def execute_query(self, cmd):
+        connection = self.get_connection()
         with self._lock_comandos:
             return self._connection.query(cmd)
 
-    def get_status_dtc(self, connection):
+    def get_status_dtc(self):
+        connection = self.get_connection()
         with self._lock_comandos:
             simulador = get_simulador()
             log("get_status_dtc: "+str(simulador))
@@ -71,6 +77,32 @@ class ObdControl:
             else:
                 return self._connection
 
+    def get_supported_pids(self):
+        if self._supported_pids is not None:
+            return self._supported_pids
+
+        connection = self.get_connection()
+
+
+        with self._lock_comandos:
+            self._supported_pids = []
+            for command in connection.get_supported_commands():
+                if command.command not in [ b"03", 
+                                            b"07", 
+                                            b"04", 
+                                            b"0100", 
+                                            b"0120", 
+                                            b"0140",
+                                            b"0600",
+                                            b"0620",
+                                            b"0640",
+                                            b"0660",
+                                            b"0680",
+                                            b"06A0",
+                                            b"0101" ]:
+                    self._supported_pids.append(command)
+        return self._supported_pids
+
     def _connect_obd(self):
         try:
             if get_debug():
@@ -86,5 +118,4 @@ class ObdControl:
             return self._connection
         except Exception as ex:
             self._connection = None
-            log("OBDERROR: " + str(ex))  
-            return json.dumps(dict(error =  str(ex)))
+            raise Exception(ex)
