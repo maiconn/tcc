@@ -7,7 +7,7 @@ from control.utils import *
 from control.obd_control import ObdControl
 from control.dtc_control import DTCControl
 from control.bluetooth_control import BluetoothControl
-from control.gpio_control import GPIOControl, Led, PiscaLedThread
+from control.gpio_control import GPIOControl, Led, PiscaLedThread, PiscaTodosLedsThread
 
 from video_streaming.camera_pi import Camera
     
@@ -26,9 +26,10 @@ def main(argv):
     global gpio_control
     try:
         gpio_control = GPIOControl()
-        gpio_control.pisca_todos_leds(1,tempo=0.2)
-
+        t = PiscaTodosLedsThread(gpio_control, 0.1)
+        t.start()
         time.sleep(1)
+        t.stop()
 
         thread_leds = PiscaLedThread(gpio_control,Led.BRANCO)
         thread_leds.start()
@@ -44,22 +45,8 @@ def main(argv):
             print('usage: init.py [-s simulador] [-d debug]  [-m monitor] [-l log] [-a addr] [-i ignorar]')
             sys.exit(2)
         
-        for opt, arg in opts:
-            if opt in ("-h", "--help"):
-                print('usage: init.py [-s simulador] [-d debug]  [-m monitor] [-l log] [-a addr]')
-                print("%s :   %s" % ("-s", "simulador utilizado"))
-                print("          0 = SEM SIMULADOR")
-                print("          1 = OBDSIM")
-                print("          2 = ECU Engine PRO")
-                print("          3 = BUSCAR DAS CONFIGS")
-                print("%s :   %s" % ("-d", "debug: 1- ativo, 0-inativo"))
-                print("%s :   %s" % ("-m", "monitor dtc: 1- ativo, 0-inativo"))
-                print("%s :   %s" % ("-l", "log em arquivo: 1- ativo, 0-inativo"))
-                print("%s :   %s" % ("-a", "MAC addr Bluetooth ELM327 ex: -a 00:1D:A5:00:00:14"))
-                print("%s :   %s" % ("-i", "ignorar obd: 1-sim, 0-nao"))
-                sys.exit(0)
-                
-            elif opt in ("-s", "--simulador"):
+        for opt, arg in opts:    
+            if opt in ("-s", "--simulador"):
                 set_simulador(int(arg))
             elif opt in ("-d", "--debug"):
                 _debug = int(arg) == 1
@@ -176,8 +163,6 @@ def gen(camera):
             frame = camera.get_frame()
             yield (b'--frame\r\n'
                 b'Content-Type: image/jpeg\r\n\r\n' + frame + b'\r\n')
-        except Exception as ex: 
-            print("caiu aquimesmo")
         finally:
             t.stop()
 
@@ -186,9 +171,6 @@ def get_video():
     global my_camera
     return Response(gen(my_camera),
                     mimetype='multipart/x-mixed-replace; boundary=frame')
-   
-        
-        
 
 @app.route('/get_gps')
 def get_gps():
@@ -308,6 +290,26 @@ def get_dtc():
     finally:
         t.stop()
 
+@app.route('/clear_dtc')
+def clear_dtc():
+    global obd_control
+    global gpio_control
+    t = gpio_control.blink_thread(Led.AZUL)
+    try:
+        obd_control.execute_query(obd.commands.CLEAR_DTC)
+        try:
+            os.remove("./database/status.txt")
+        except Exception as ex:
+            if not "No such file or directory" in str(ex):
+                raise Exception(ex)
+        return json.dumps(dict(status =  "OK"))
+    except Exception as ex:
+        log_error(str(ex))
+        gpio_control.blink(Led.VERMELHO, aceso=False)
+        return json.dumps(dict(error = str(ex)))
+    finally:
+        t.stop()
+
 @app.route('/save_configs', methods=['POST'])
 def save_configs():
     try:
@@ -322,7 +324,6 @@ def save_configs():
 @app.route('/get_configs', methods=['GET'])
 def configs():
     try:
-        # pdb.set_trace()
         configs = get_configs()
         if configs is not None:
             return json.dumps(configs.__dict__)

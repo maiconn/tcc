@@ -14,14 +14,7 @@ do
  case "${option}"
  in
  h) 
-    echo "help start.h"
-    echo "-s simulador [0: sem simulador, 1: obdsim, 2: ecu]"
-    echo "-d debug [0, 1]"
-    echo "-m monitor [0, 1]"
-    echo "-l logar em arquivo [0, 1]"
-    echo "-a ADDR [MAC ADDR]"
-    echo "-i IGNORAR [0,1]"
-    python init.py -h
+    python power_on.py -h
     exit
  ;;
  s) SIMULADOR=${OPTARG};;
@@ -42,10 +35,8 @@ echo "LOG='$LOG'"
 echo "IGNORAR='$IGNORAR'"
 
 ps aux | grep python
-sleep 1s
 sudo pkill -9 -f 'power_on.py'
-sleep 2s
-
+sleep 1s
 
 if [ "$ADDR" = "" ]
 then

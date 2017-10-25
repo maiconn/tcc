@@ -81,8 +81,6 @@ def main(argv):
 
         VerificaResetThread(gpio_control, main, argv).start()
 
-        # run script
-        
         t.stop()
         p = Popen(['python', 'init.py'] + argv, stdout=PIPE)
         p.stdout.close()
