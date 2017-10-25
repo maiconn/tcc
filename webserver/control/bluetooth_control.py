@@ -38,6 +38,8 @@ class BluetoothControl:
                 if(svc["protocol"] == "RFCOMM"):
                     if("COM" in svc["name"]):
                         return int(svc["port"])
+                    if(svc["name"] == "SPP"):
+                        return int(svc["port"])
                     if(svc["name"] == "BLT"):
                         return int(svc["port"])
         return None

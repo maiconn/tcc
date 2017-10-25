@@ -1,4 +1,4 @@
-import picamera, base64, serial, io, pdb, sys, getopt, numbers, time
+import picamera, base64, serial, io, pdb, sys, getopt, numbers, time, threading
 
 from flask import Flask, jsonify, request, json, Response
 from flask_cors import CORS
@@ -7,6 +7,7 @@ from control.utils import *
 from control.obd_control import ObdControl
 from control.dtc_control import DTCControl
 from control.bluetooth_control import BluetoothControl
+from control.gpio_control import GPIOControl, Led, PiscaLedThread
 
 from video_streaming.camera_pi import Camera
     
@@ -15,94 +16,134 @@ CORS(app)
 
 obd_control = None
 bluetooth_control = None
+gpio_control = None
 my_camera = None
+thread_leds = None
 
 def main(argv):
     global obd_control
     global my_camera
-    _debug = True
-    _monitor = False
-    _log = True
-    _btMacAddr = None
-    _ignorar = False
+    global gpio_control
     try:
-        opts, args = getopt.getopt(argv,"hd:s:m:l:a:i:",["help","simulador=","debug=","monitor=","log=","addr=","ignorar="])
-    except getopt.GetoptError:
-        print('usage: init.py [-s simulador] [-d debug]  [-m monitor] [-l log] [-a addr] [-i ignorar]')
-        sys.exit(2)
-    
-    for opt, arg in opts:
-        if opt in ("-h", "--help"):
-            print('usage: init.py [-s simulador] [-d debug]  [-m monitor] [-l log] [-a addr]')
-            print("%s :   %s" % ("-s", "simulador utilizado"))
-            print("          0 = SEM SIMULADOR")
-            print("          1 = OBDSIM")
-            print("          2 = ECU Engine PRO")
-            print("          3 = BUSCAR DAS CONFIGS")
-            print("%s :   %s" % ("-d", "debug: 1- ativo, 0-inativo"))
-            print("%s :   %s" % ("-m", "monitor dtc: 1- ativo, 0-inativo"))
-            print("%s :   %s" % ("-l", "log em arquivo: 1- ativo, 0-inativo"))
-            print("%s :   %s" % ("-a", "MAC addr Bluetooth ELM327 ex: -a 00:1D:A5:00:00:14"))
-            print("%s :   %s" % ("-i", "ignorar obd: 1-sim, 0-nao"))
-            sys.exit(0)
-            
-        elif opt in ("-s", "--simulador"):
-            set_simulador(int(arg))
-        elif opt in ("-d", "--debug"):
-            _debug = int(arg) == 1
-        elif opt in ("-m", "--monitor"):
-            _monitor = int(arg) == 1
-        elif opt in ("-l", "--log"):
-            _log = int(arg) == 1
-        elif opt in ("-a", "--addr"):
-            _btMacAddr = int(arg)
-        elif opt in ("-i", "--ignorar"):
-            _ignorar = int(arg) == 1
+        gpio_control = GPIOControl()
+        gpio_control.pisca_todos_leds(1,tempo=0.2)
 
-    configurar_log(_log)
-    set_debug(_debug)
-    log("==============>INICIANDO SERVIDOR<=============")
-    log('_simulador: '+ str(get_simulador()))
-    log('    _debug: '+ str(get_debug()))
-    log('  _monitor: '+ str(_monitor))
-    log('      _log: '+ str(_log))
-    log('_btMacAddr: '+ str(_btMacAddr))
-    log('  _ignorar: '+ str(_ignorar))
+        time.sleep(1)
 
-    config_pastas()
+        thread_leds = PiscaLedThread(gpio_control,Led.BRANCO)
+        thread_leds.start()
 
-    if not _ignorar:
-        _connected = False
-        _tentativas = 1
-        _max_tentativas = 5
-        while not _connected:
-            log("====> iniciando conexoes [%so tentativa]" % str(_tentativas))
-            try:
-                log("=> iniciando conexao bluetooth")
-                bluetooth_control = BluetoothControl()
-                if not bluetooth_control.configurar_bluetooth(_btMacAddr):
-                    raise Exception('bluetooth nao configurado corretamente.')
+        _debug = True
+        _monitor = False
+        _log = True
+        _btMacAddr = None
+        _ignorar = False
+        try:
+            opts, args = getopt.getopt(argv,"hd:s:m:l:a:i:",["help","simulador=","debug=","monitor=","log=","addr=","ignorar="])
+        except getopt.GetoptError:
+            print('usage: init.py [-s simulador] [-d debug]  [-m monitor] [-l log] [-a addr] [-i ignorar]')
+            sys.exit(2)
+        
+        for opt, arg in opts:
+            if opt in ("-h", "--help"):
+                print('usage: init.py [-s simulador] [-d debug]  [-m monitor] [-l log] [-a addr]')
+                print("%s :   %s" % ("-s", "simulador utilizado"))
+                print("          0 = SEM SIMULADOR")
+                print("          1 = OBDSIM")
+                print("          2 = ECU Engine PRO")
+                print("          3 = BUSCAR DAS CONFIGS")
+                print("%s :   %s" % ("-d", "debug: 1- ativo, 0-inativo"))
+                print("%s :   %s" % ("-m", "monitor dtc: 1- ativo, 0-inativo"))
+                print("%s :   %s" % ("-l", "log em arquivo: 1- ativo, 0-inativo"))
+                print("%s :   %s" % ("-a", "MAC addr Bluetooth ELM327 ex: -a 00:1D:A5:00:00:14"))
+                print("%s :   %s" % ("-i", "ignorar obd: 1-sim, 0-nao"))
+                sys.exit(0)
                 
-                log("=> iniciando conexao obd2")
-                obd_control = ObdControl()
-                if _monitor:
-                    log("=> iniciando monitor obd")
-                    DTCControl(20, obd_control)
-                _connected = True
-            except Exception as ex:
-                log_error('BT_OBR_ERR: %s.' % str(ex))
-                if _tentativas >= _max_tentativas:
-                    log_error('servidor nao iniciado, causa: %s.' % str(ex))
-                    sys.exit(2)
-                _tentativas += 1
-    else:
-        log_warn("=> obd e bluetooth inativos")
+            elif opt in ("-s", "--simulador"):
+                set_simulador(int(arg))
+            elif opt in ("-d", "--debug"):
+                _debug = int(arg) == 1
+            elif opt in ("-m", "--monitor"):
+                _monitor = int(arg) == 1
+            elif opt in ("-l", "--log"):
+                _log = int(arg) == 1
+            elif opt in ("-a", "--addr"):
+                _btMacAddr = int(arg)
+            elif opt in ("-i", "--ignorar"):
+                _ignorar = int(arg) == 1
 
-    log("=> iniciando camera")
-    my_camera = Camera()
+        configurar_log(_log)
+        set_debug(_debug)
+        log("==============>INICIANDO SERVIDOR<=============")
+        log('_simulador: '+ str(get_simulador()))
+        log('    _debug: '+ str(get_debug()))
+        log('  _monitor: '+ str(_monitor))
+        log('      _log: '+ str(_log))
+        log('_btMacAddr: '+ str(_btMacAddr))
+        log('  _ignorar: '+ str(_ignorar))
 
-    app.run(debug=_debug, host='0.0.0.0', port=80, threaded=True)
-    # app.run(debug=_debug, host='0.0.0.0', port=80)
+        config_pastas()
+
+        if not _ignorar:
+            _connected = False
+            _tentativas = 1
+            _max_tentativas = 5
+            while not _connected:
+                log("====> iniciando conexoes [%so tentativa]" % str(_tentativas))
+                try:
+                    thread_leds.stop()
+                    thread_leds = PiscaLedThread(gpio_control, Led.AZUL)
+                    thread_leds.start()
+                    log("=> iniciando conexao bluetooth")
+                    bluetooth_control = BluetoothControl()
+                    if not bluetooth_control.configurar_bluetooth(_btMacAddr):
+                        raise Exception('bluetooth nao configurado corretamente.')
+                   
+                    thread_leds.stop()
+                    thread_leds = PiscaLedThread(gpio_control, Led.VERDE)
+                    thread_leds.start()
+
+                    log("=> iniciando conexao obd2")
+                    obd_control = ObdControl()
+                    if _monitor:
+                        log("=> iniciando monitor obd")
+                        DTCControl(20, obd_control)
+                    _connected = True
+                    thread_leds.stop()
+                except Exception as ex:
+                    log_error('BT_OBR_ERR: %s.' % str(ex))
+                    gpio_control.blink(Led.VERMELHO,  tempo=3, aceso=False)
+                    if _tentativas >= _max_tentativas:
+                        log_error('servidor nao iniciado, causa: %s.' % str(ex))
+                        sys.exit(2)
+                    _tentativas += 1
+        else:
+            log_warn("=> obd e bluetooth inativos")
+
+        log("=> iniciando camera")
+        my_camera = Camera()
+
+        app.run(debug=_debug, host='0.0.0.0', port=80, threaded=True)
+        # app.run(debug=_debug, host='0.0.0.0', port=80)
+    except KeyboardInterrupt:  # When 'Ctrl+C' is pressed, the child program destroy() will be  executed.
+        stop_all()
+
+def stop_all():
+    global gpio_control
+    global my_camera
+    global thread_leds
+    if gpio_control is not None:
+        gpio_control.destroy()
+    if my_camera is not None:
+        my_camera.stop()
+    if thread_leds is not None:
+        thread_leds.stop()
+
+def shutdown_server():
+    func = request.environ.get('werkzeug.server.shutdown')
+    if func is None:
+        raise RuntimeError('Not running with the Werkzeug Server')
+    func()
 
 @app.route('/')
 def index():
@@ -110,12 +151,17 @@ def index():
 
 @app.errorhandler(Exception)
 def all_exception_handler(error):
+    global gpio_control
+    gpio_control.blink(Led.VERMELHO, aceso=False)
     log_exception(error)
     return 'Error', 500
 
 @app.route('/get_foto')
 def get_foto():
     global my_camera
+    global gpio_control
+    gpio_control.blink(Led.BRANCO)
+
     my_stream = io.BytesIO()
     encoded_string = base64.b64encode(my_camera.get_frame())
     return 'data:image/jpeg;base64,' + encoded_string
@@ -123,59 +169,74 @@ def get_foto():
 
 def gen(camera):
     """Video streaming generator function."""
+    global gpio_control
     while True:
-        frame = camera.get_frame()
-        yield (b'--frame\r\n'
-               b'Content-Type: image/jpeg\r\n\r\n' + frame + b'\r\n')
+        t = gpio_control.blink_thread(Led.BRANCO,1)
+        try:
+            frame = camera.get_frame()
+            yield (b'--frame\r\n'
+                b'Content-Type: image/jpeg\r\n\r\n' + frame + b'\r\n')
+        except Exception as ex: 
+            print("caiu aquimesmo")
+        finally:
+            t.stop()
 
 @app.route('/get_video')
 def get_video():
     global my_camera
     return Response(gen(my_camera),
                     mimetype='multipart/x-mixed-replace; boundary=frame')
+   
+        
+        
 
 @app.route('/get_gps')
 def get_gps():
-    port = serial.Serial("/dev/serial0", baudrate=9600, timeout=10.0)
-    line = []
-    log("connected to: " + port.portstr)
+    global gpio_control
+    t = gpio_control.blink_thread(Led.VERDE)
+    try:
+        port = serial.Serial("/dev/serial0", baudrate=9600, timeout=10.0)
+        line = []
+        log("connected to: " + port.portstr)
 
-    count = 1
-    while count < 15:
-        try:
-            rcv = port.read()
-        except:
-            rcv = ''
+        count = 1
+        while count < 15:
+            try:
+                rcv = port.read()
+            except:
+                rcv = ''
 
-        line.append(rcv)
+            line.append(rcv)
 
-        if rcv == '\n':
-            line = "".join(line)       
-            log(line)
-            if line.find("GPGGA") != -1: 
-                retorno = line.split(',')
+            if rcv == '\n':
+                line = "".join(line)       
+                log(line)
+                if line.find("GPGGA") != -1: 
+                    retorno = line.split(',')
 
-                if retorno[2] == '':
-                    return json.dumps(dict(error =  "Sem Sinal"))
+                    if retorno[2] == '':
+                        return json.dumps(dict(error =  "Sem Sinal"))
 
-                lat = int(retorno[2][0:2]) + (float(retorno[2][2:len(retorno[2])]) / 60)
-                if retorno[3] == 'S' :
-                    lat = lat * -1
+                    lat = int(retorno[2][0:2]) + (float(retorno[2][2:len(retorno[2])]) / 60)
+                    if retorno[3] == 'S' :
+                        lat = lat * -1
+                    
+                    longit = int(retorno[4][0:3]) + (float(retorno[4][3:len(retorno[4])]) / 60)
+                    if retorno[5] == 'W':
+                        longit = longit * -1
+                    
+                    return json.dumps(dict(lat=lat, longit=longit))
                 
-                longit = int(retorno[4][0:3]) + (float(retorno[4][3:len(retorno[4])]) / 60)
-                if retorno[5] == 'W':
-                    longit = longit * -1
-                
-                return json.dumps(dict(lat=lat, longit=longit))
-            
-            line = []
-            count = count + 1
-
+                line = []
+                count = count + 1
+    finally:
+        t.stop()
     return json.dumps(dict(error =  "Sem Dados na porta /dev/serial0"))
 
 @app.route('/get_obdii_pids')
 def get_obdii_pids():
-    global obd_control
+    global gpio_control
+    t = gpio_control.blink_thread(Led.AZUL)
     try:
         listPids = []
         for command in obd_control.get_supported_pids():
@@ -193,11 +254,16 @@ def get_obdii_pids():
         return json.dumps(sorted(listPids, key=lambda s: s.get('codigo')))
     except Exception as ex:
         log_error(str(ex))
+        gpio_control.blink(Led.VERMELHO,  tempo=1, aceso=False)
         return json.dumps(dict(error = str(ex)))
+    finally:
+        t.stop()
 
 @app.route('/get_obdii_values')
 def get_obdii_values():
     global obd_control
+    global gpio_control
+    t = gpio_control.blink_thread(Led.AZUL)
     try:
         listSensors = []
         
@@ -223,17 +289,24 @@ def get_obdii_values():
         return json.dumps(sorted(listSensors, key=lambda s: s.get('codigo')))
     except Exception as ex:
         log_error(str(ex))
+        gpio_control.blink(Led.VERMELHO,  tempo=1, aceso=False)
         return json.dumps(dict(error = str(ex)))
+    finally:
+        t.stop()
 
 @app.route('/get_dtc')
 def get_dtc():
-    # pdb.set_trace()
     global obd_control
+    global gpio_control
+    t = gpio_control.blink_thread(Led.AZUL)
     try:
         return json.dumps(obd_control.get_status_dtc().json_dump())
     except Exception as ex:
         log_error(str(ex))
+        gpio_control.blink(Led.VERMELHO, aceso=False)
         return json.dumps(dict(error = str(ex)))
+    finally:
+        t.stop()
 
 @app.route('/save_configs', methods=['POST'])
 def save_configs():

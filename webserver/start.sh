@@ -41,16 +41,17 @@ echo "ADDR='$ADDR'"
 echo "LOG='$LOG'"
 echo "IGNORAR='$IGNORAR'"
 
-ps aux | grep 'init.py'
+ps aux | grep python
 sleep 1s
-sudo pkill -9 -f 'init.py'
+sudo pkill -9 -f 'power_on.py'
+sleep 2s
+
 
 if [ "$ADDR" = "" ]
 then
-    sudo python init.py --simulador=$SIMULADOR --debug=$DEBUG --monitor=$MONITOR --log=$LOG --ignorar=$IGNORAR
+    sudo python power_on.py --simulador=$SIMULADOR --debug=$DEBUG --monitor=$MONITOR --log=$LOG --ignorar=$IGNORAR
 else
-    sudo python init.py --simulador=$SIMULADOR --debug=$DEBUG --monitor=$MONITOR --addr=$ADDR --log=$LOG --ignorar=$IGNORAR
+    sudo python power_on.py --simulador=$SIMULADOR --debug=$DEBUG --monitor=$MONITOR --addr=$ADDR --log=$LOG --ignorar=$IGNORAR
 fi
-
 
 exit
