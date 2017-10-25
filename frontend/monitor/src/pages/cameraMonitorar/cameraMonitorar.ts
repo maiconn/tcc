@@ -27,19 +27,16 @@ export class CameraMonitorarPage {
     ) 
   {  
     this.events.subscribe('tab:changed', (index) => {
-      if(index != 1){
-        if(this.executando)
-          this.pausar();
+      if(this.executando){
+        this.pausar();
       }
     });
-    if(!this.executando)
-      this.executar();
+    this.executar();
   }
 
   ionViewDidLoad() {
     this.navBar.backButtonClick = (e:UIEvent)=>{
       this.pausar();
-      this.navCtrl.pop();
      }
   }
 
@@ -47,6 +44,7 @@ export class CameraMonitorarPage {
     this.src = null;
     this.dataHora = null;
     this.executando = false;
+    this.navCtrl.pop();
   }
 
   public executar(){

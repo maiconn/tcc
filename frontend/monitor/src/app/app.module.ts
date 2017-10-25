@@ -5,6 +5,7 @@ import { MyApp } from './app.component';
 import { HttpModule } from '@angular/http';
 import { DatePipe } from '@angular/common'
 import { Clipboard } from '@ionic-native/clipboard';
+import { Insomnia } from '@ionic-native/insomnia';
 
 import { AgmCoreModule } from '@agm/core';
 
@@ -76,7 +77,16 @@ import { GaugesModule } from 'ng-canvas-gauges/lib';
     RemoitService,
     AppSettings,
     HttpService,
-    Clipboard
+    Clipboard,
+    Insomnia
   ]
 })
-export class AppModule {}
+export class AppModule {
+  constructor(private insomnia :Insomnia){
+    this.insomnia.keepAwake()
+    .then(
+      () => console.log('success'),
+      () => console.log('error')
+    );
+  }
+}

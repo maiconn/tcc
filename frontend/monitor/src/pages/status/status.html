@@ -25,7 +25,8 @@
             <h2>{{statusDtc.status.qtd_erros}}</h2>
             <p>Diagnostic Trouble Codes</p>
           </ion-item>
-        </ion-list>        
+        </ion-list>
+        <button ion-button block color="danger" (click)="limparDTC()">Limpar Códigos DTC</button>
     </ion-card>
 
     <ion-card *ngIf="statusDtc.dtc_pendentes.length > 0">

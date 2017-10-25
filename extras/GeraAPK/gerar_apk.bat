@@ -8,6 +8,10 @@ DEL /Q android-release-unsigned.apk Monitor1.0.apk
 DEL /Q Monitor1.0.apk
 DEL /Q "C:\Users\MaiconM\Desktop\Monitor1.0.apk"
 
+IF  not EXIST "C:\Users\MaiconM\Documents\FURB\TCC\frontend\monitor\platforms\android\build\outputs\apk\my-release-key.jks" (
+	echo "gerando chave..."
+	call "C:\Users\MaiconM\Documents\FURB\TCC\extras\GeraAPK\2_gerar_chave.bat"
+) 
 
 cd C:\Users\MaiconM\Documents\FURB\TCC\frontend\monitor  
 start ionic cordova build android --release

@@ -78,3 +78,6 @@ ionic cordova build android --prod --release
 ---INICIAR VPN
 sudo openvpn /etc/openvpn/client.conf
 tail /var/log/daemon.log
+
+
+http://raspi.tv/wp-content/uploads/2013/07/Rev2-GPIO-bold.jpg
