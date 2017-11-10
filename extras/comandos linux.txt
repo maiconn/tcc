@@ -84,3 +84,5 @@ http://raspi.tv/wp-content/uploads/2013/07/Rev2-GPIO-bold.jpg
 
 
 curl ipinfo.io/ip
+
+sudo wvdial 3gconnect
