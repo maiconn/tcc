@@ -10,8 +10,7 @@ import 'rxjs/add/operator/toPromise';
 @Injectable()
 export class AppSettings {
     public static DEFAULT_TIMEOUT: number = 30000;
-    // public static API_ENDPOINT_INIT = 'http://192.168.0.23/';
-    public static API_ENDPOINT_INIT = 'http://monitor-tcc2.ddns.net:85/';
+    public static API_ENDPOINT_INIT = 'http://veiculo.sytes.net:5000/';
 
     public static REMOT3_USER = "maicon.gerardi@gmail.com";
     public static REMOT3_PASS = "5158126";

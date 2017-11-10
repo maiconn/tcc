@@ -48,6 +48,21 @@ export class ConfiguracoesPage {
     this.navCtrl.push(SSHPage, {configuracoes: this.configuracoes});
   }
 
+  private ips = [
+    "http://veiculo.sytes.net:5000/",
+    "http://192.168.0.23:5000/",
+    "http://192.168.43.115:5000/"    
+  ];
+  public indexIpAtual: number = 1;
+    
+  public trocarIp(){
+    if(this.indexIpAtual == 2){
+      this.indexIpAtual = -1
+    }
+
+    this.configuracoes.endpoint = this.ips[++this.indexIpAtual];
+  }
+
   public salvar(){
     let loader = this.loadingCtrl.create({
       content: "Salvando..."

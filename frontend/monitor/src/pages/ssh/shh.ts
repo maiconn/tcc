@@ -55,6 +55,7 @@ export class SSHPage {
       this.ssh += this.configuracoes.endpoint
                       .substring(0, this.configuracoes.endpoint.length - 1)
                       .replace("http://","")
+                      .replace(":5000","")
                        + ":22";
       this.clipboard.copy(this.ssh);
       loader.dismiss();

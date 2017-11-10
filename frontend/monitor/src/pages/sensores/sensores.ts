@@ -22,6 +22,7 @@ export class SensoresPage {
               private httpService : HttpService, 
               private events: Events) 
   {
+    this.recuperarPids();
     this.events.subscribe('tab:changed', (index) => {
       if(index != 3)
         this.pausar();
@@ -37,8 +38,6 @@ export class SensoresPage {
 
   public recarregar(){
     this.lerSensores = true;
-    
-    this.recuperarPids();
     
     if(this.lerSensores){
       this.loaderRecarregar = this.loadingCtrl.create({

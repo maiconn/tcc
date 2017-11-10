@@ -21,10 +21,10 @@
         <ion-option value="0">Endpoint</ion-option>
       </ion-select>
     </ion-item>
-    <ion-list [hidden]="configuracoes.tipoConexao != '0'" >
+    <ion-list [hidden]="configuracoes.tipoConexao != '0'" (swipe)="trocarIp()">
       <ion-item>
         <ion-label stacked>Endpoint</ion-label>
-        <ion-input type="text" [(ngModel)]="configuracoes.endpoint" placeholder="Endpoint"></ion-input>
+        <ion-input type="text" #meuIp [(ngModel)]="configuracoes.endpoint" placeholder="Endpoint"></ion-input>
       </ion-item>
       <button ion-button block (click)="carregarConfiguracoesEndpoint()">Carregar Configurações</button>  
     </ion-list>
