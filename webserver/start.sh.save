@@ -36,6 +36,10 @@ echo "IGNORAR='$IGNORAR'"
 
 ps aux | grep python
 sudo pkill -9 -f 'power_on.py'
+sleep 1s
+
+dhcl
+sudo noip2 -S
 
 if [ "$ADDR" = "" ]
 then

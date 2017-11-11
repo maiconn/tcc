@@ -2,7 +2,7 @@ import RPi.GPIO as GPIO
 import time, os, threading, sys, getopt
 from subprocess import Popen, PIPE
 from datetime import datetime, timedelta
-from control.gpio_control import GPIOControl, PiscaTodosLedsThread
+from control.gpio_control import GPIOControl, PiscaTodosLedsThread, Led, PiscaLedThread
 
 class VerificaResetThread(threading.Thread):
     def __init__(self, gpio_control, mainFn, opts):
@@ -20,7 +20,7 @@ class VerificaResetThread(threading.Thread):
         while not self.stopped:
             if GPIO.input(self.gpio_control.PIN_BOTAO) == 1:
                 if not self.pressed:
-                    newDate = datetime.now() + timedelta(seconds=4)
+                    newDate = datetime.now() + timedelta(seconds=3)
                     self.pressed = True
                 else:
                     intervalo = (newDate - datetime.now()).total_seconds()
@@ -35,6 +35,60 @@ class VerificaResetThread(threading.Thread):
     def stop(self):
         self.stopped = True
 
+class ThreadPiscaPrimeiroLed(threading.Thread):
+    def __init__(self, gpio_control):
+        self.stopped = False
+        self.gpio_control = gpio_control
+        threading.Thread.__init__(self)
+
+    def run(self):
+        newDate = None
+        intervalo = 0
+        newDate = datetime.now() + timedelta(seconds=35)
+        while not self.stopped:
+            intervalo = (newDate - datetime.now()).total_seconds()
+            if intervalo <= 0:
+                self.stop()
+            else:
+                self.gpio_control.pisca_led(Led.BRANCO_1, tempo=0.05)
+    
+    def stop(self):
+        self.stopped = True
+
+class ConfiguracaoModemENoIpThread(threading.Thread):
+    def __init__(self, gpio_control):
+        self.stopped = False
+	self.gpio_control = gpio_control
+        threading.Thread.__init__(self)
+
+    def run(self):
+        thread_leds = PiscaLedThread(self.gpio_control, Led.BRANCO_1)
+        thread_leds.start()
+
+	_publico = False
+	while not _publico:
+	    print("====> iniciando rede e configurando noip")
+	    print("==> discando")
+	    print("" + os.popen("sudo pkill -9 -f wvdial").read())
+	    time.sleep(2)
+	    os.popen("sudo wvdial tim &")
+	    time.sleep(30)
+	    print("==> verificando ip")
+	    print("" + os.popen("curl https://ipinfo.io/ip").read())
+	    print("==> configurando noip")
+	    print("" + os.popen("sudo pkill -9 -f noip2").read())
+	    time.sleep(10)
+	    print("" + os.popen("sudo noip2 &").read())
+	    time.sleep(10)
+	    noip = os.popen("sudo noip2 -S").read()
+	    print("" + noip)
+	    _publico = "Last IP Address set 0.0.0.0".lower() not in str(noip).lower()
+	    print("" + str(_publico))
+	thread_leds.stop()
+    
+    def stop(self):
+        self.stopped = True
+
 def main(argv):
     _debug = True
     _monitor = False
@@ -45,6 +99,7 @@ def main(argv):
 
     gpio_control = GPIOControl()
     t = PiscaTodosLedsThread(gpio_control, 0.1)
+    time.sleep(1)
     t.start()
 
     print("   " + os.popen("sudo pkill -9 -f 'init.py'").read())
@@ -80,8 +135,10 @@ def main(argv):
                 _ignorar = int(arg) == 1
 
         VerificaResetThread(gpio_control, main, argv).start()
+	t.stop()
 
-        t.stop()
+	ConfiguracaoModemENoIpThread(gpio_control).start()
+
         p = Popen(['python', 'init.py'] + argv, stdout=PIPE)
         p.stdout.close()
     except KeyboardInterrupt:

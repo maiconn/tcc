@@ -26,12 +26,7 @@ def main(argv):
     global gpio_control
     try:
         gpio_control = GPIOControl()
-        t = PiscaTodosLedsThread(gpio_control, 0.1)
-        t.start()
-        time.sleep(1)
-        t.stop()
-
-        thread_leds = PiscaLedThread(gpio_control,Led.BRANCO)
+        thread_leds = PiscaLedThread(gpio_control,Led.BRANCO_2)
         thread_leds.start()
 
         _debug = True
@@ -99,9 +94,10 @@ def main(argv):
                     thread_leds.stop()
                 except Exception as ex:
                     log_error('BT_OBR_ERR: %s.' % str(ex))
-                    gpio_control.blink(Led.VERMELHO,  tempo=3, aceso=False)
+                    gpio_control.blink(Led.VERMELHO,  aceso=False, tempo_piscando=1)
                     if _tentativas >= _max_tentativas:
                         log_error('servidor nao iniciado, causa: %s.' % str(ex))
+                        thread_leds.stop()
                         sys.exit(2)
                     _tentativas += 1
         else:
@@ -110,9 +106,18 @@ def main(argv):
         log("=> iniciando camera")
         my_camera = Camera()
 
-        app.run(debug=_debug, host='0.0.0.0', port=80, threaded=True)
+        t_servidor_startou_led = PiscaTodosLedsThread(gpio_control, aceso=True,  acender_vermelho=False)
+        t_servidor_startou_led.start()
+        time.sleep(0.8)
+        t_servidor_startou_led.stop()
+
+        app.run(debug=_debug, host='0.0.0.0', port=5000, threaded=True)
+
         # app.run(debug=_debug, host='0.0.0.0', port=80)
-    except KeyboardInterrupt:  # When 'Ctrl+C' is pressed, the child program destroy() will be  executed.
+    except Exception as ex:
+        log_error(ex)
+        gpio_control.acende_led(Led.VERMELHO)
+    finally:
         stop_all()
 
 def stop_all():
@@ -147,7 +152,7 @@ def all_exception_handler(error):
 def get_foto():
     global my_camera
     global gpio_control
-    gpio_control.blink(Led.BRANCO)
+    gpio_control.blink(Led.BRANCO_2)
 
     my_stream = io.BytesIO()
     encoded_string = base64.b64encode(my_camera.get_frame())
@@ -158,7 +163,7 @@ def gen(camera):
     """Video streaming generator function."""
     global gpio_control
     while True:
-        t = gpio_control.blink_thread(Led.BRANCO,1)
+        t = gpio_control.blink_thread(Led.BRANCO_2,1)
         try:
             frame = camera.get_frame()
             yield (b'--frame\r\n'
