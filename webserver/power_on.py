@@ -65,26 +65,35 @@ class ConfiguracaoModemENoIpThread(threading.Thread):
         thread_leds = PiscaLedThread(self.gpio_control, Led.BRANCO_1)
         thread_leds.start()
 
-	_publico = False
-	while not _publico:
-	    print("====> iniciando rede e configurando noip")
-	    print("==> discando")
-	    print("" + os.popen("sudo pkill -9 -f wvdial").read())
-	    time.sleep(2)
-	    os.popen("sudo wvdial tim &")
-	    time.sleep(30)
-	    print("==> verificando ip")
-	    print("" + os.popen("curl https://ipinfo.io/ip").read())
-	    print("==> configurando noip")
-	    print("" + os.popen("sudo pkill -9 -f noip2").read())
-	    time.sleep(10)
-	    print("" + os.popen("sudo noip2 &").read())
-	    time.sleep(10)
-	    noip = os.popen("sudo noip2 -S").read()
-	    print("" + noip)
-	    _publico = "Last IP Address set 0.0.0.0".lower() not in str(noip).lower()
-	    print("" + str(_publico))
-	thread_leds.stop()
+        while True:
+            print("====> iniciando rede e configurando noip")
+            print("==> discando")
+            print("" + os.popen("sudo pkill -9 -f wvdial").read())
+            time.sleep(1)
+            os.popen("sudo wvdial tim &")
+            time.sleep(7)
+            print("==> verificando ip")     
+            ipPpp0 = str(os.popen("ifconfig ppp0 | grep inet").read()).replace("          inet end.: ", "")[:3]
+            if int(ipPpp0) <= 100:
+                print(ipPpp0)
+                self.gpio_control.pisca_led(Led.VERMELHO, tempo=1, aceso=False)
+                continue
+            break
+
+        thread_leds.stop()
+        thread_leds = PiscaLedThread(self.gpio_control, Led.BRANCO_1, tempo=0.05)
+        thread_leds.start()
+        print("" + os.popen("route add default ppp0").read())
+        print("" + os.popen("curl https://ipinfo.io/ip").read())
+        print("==> configurando noip")
+        print("" + os.popen("sudo pkill -9 -f noip2").read())
+        time.sleep(2)
+        os.popen("sudo noip2").read()
+        time.sleep(5)
+        os.popen("sudo noip2 -S").read()
+        
+        thread_leds.stop()
+        
     
     def stop(self):
         self.stopped = True
@@ -135,9 +144,9 @@ def main(argv):
                 _ignorar = int(arg) == 1
 
         VerificaResetThread(gpio_control, main, argv).start()
-	t.stop()
+        t.stop()
 
-	ConfiguracaoModemENoIpThread(gpio_control).start()
+        ConfiguracaoModemENoIpThread(gpio_control).start()
 
         p = Popen(['python', 'init.py'] + argv, stdout=PIPE)
         p.stdout.close()
@@ -146,8 +155,6 @@ def main(argv):
     except getopt.GetoptError:
         print('usage: power_on.py [-s simulador] [-d debug]  [-m monitor] [-l log] [-a addr] [-i ignorar]')
         sys.exit(2)
-   
-
-
+        
 if __name__ == '__main__':
     main(sys.argv[1:])

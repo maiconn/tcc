@@ -11,9 +11,8 @@ IGNORAR=0
 
 while getopts hs:d:m:a:i: option
 do
- case "${option}"
- in
- h) 
+ case "${option}" in
+ h)
     python power_on.py -h
     exit
  ;;
