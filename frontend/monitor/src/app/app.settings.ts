@@ -12,8 +12,8 @@ export class AppSettings {
     public static DEFAULT_TIMEOUT: number = 30000;
     public static API_ENDPOINT_INIT = 'http://veiculo.sytes.net:5000/';
 
-    public static REMOT3_USER = "maicon.gerardi@gmail.com";
-    public static REMOT3_PASS = "5158126";
+    public static REMOT3_USER = "";
+    public static REMOT3_PASS = "";
 
     public static DEFAULT_CONFIGURATIONS = { 
         tipoConexao: 0, 
