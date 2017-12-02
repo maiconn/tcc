@@ -1,9 +1,0 @@
-from video_streaming.camera_pi import Camera
-
-my_camera = Camera()
-
-@app.route('/get_foto')
-def get_foto():
-    global my_camera
-    return 'data:image/jpeg;base64,' + base64.b64encode(my_camera.get_frame())
-
