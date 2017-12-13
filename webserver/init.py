@@ -154,7 +154,6 @@ def get_foto():
     global gpio_control
     gpio_control.blink(Led.BRANCO_2)
 
-    my_stream = io.BytesIO()
     encoded_string = base64.b64encode(my_camera.get_frame())
     return 'data:image/jpeg;base64,' + encoded_string
 

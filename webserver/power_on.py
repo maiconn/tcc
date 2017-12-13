@@ -71,7 +71,7 @@ class ConfiguracaoModemENoIpThread(threading.Thread):
             print("" + os.popen("sudo pkill -9 -f wvdial").read())
             time.sleep(1)
             os.popen("sudo wvdial tim &")
-            time.sleep(7)
+            time.sleep(30)
             print("==> verificando ip")     
             ipPpp0 = str(os.popen("ifconfig ppp0 | grep inet").read()).replace("          inet end.: ", "")[:3]
             if int(ipPpp0) <= 100:
