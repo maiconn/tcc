@@ -30,13 +30,13 @@ The application has been developed to inform possible mechanical failure or thef
 
 ## Hardwares Used
 - Raspberry Pi Zero W
-- Adaptador ELM327 Bluetooth
+- ELM327 Bluetooth Adapter
 - GPS Ubox GY-GPS6MV2
 - Raspberry Pi Camera 1.3
-- Modem USB 3G ZTE MF626
+- USB Modem 3G ZTE MF626
 - TIM brazilian operator chip
 - LEDs
-- Buttons Switch
+- Switch Buttons
 
 ## Application Architecture
 <kbd>
@@ -56,3 +56,9 @@ The application has been developed to inform possible mechanical failure or thef
 | Images / Streaming |
 | ------------- |
 | <img src="/docs/camera.png"> |
+
+# License
+GNU GPL v3.0
+
+
+Enjoy and drive safe!
