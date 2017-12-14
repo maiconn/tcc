@@ -14,8 +14,8 @@ An application that covers:
 * Vehicle images in real time
 * Geographic position
 * OBD2 port data:
-   * Sensors (All)
-   * Diagnostic Trouble Code (DTCs)
+  * Sensors (All)
+  * Diagnostic Trouble Code (DTCs)
 * Inform status of execution of the embedded server by means of LEDs
 * Notify the user via text messages and email in case of DTC failures
 
