@@ -1,4 +1,6 @@
 # Aplicação Para Monitoramento Veicular Em Tempo Real
+[README](README_EN.md) | [LEIA-ME](README.md)
+
 - <a href="https://youtu.be/3hla2eGgnB4">Demo</a>
 - [Apresentação](/apresentação/tcc_bcc_2017_2_mmgsilva_MaiconMachadoGerardiDaSilva-AP.pdf)
 - [Monografia](https://github.com/maiconn/tcc/raw/master/monografia/VF%20-%20Ajustes%20Finais/tcc_bcc_2017_2_mmgsilva_MaiconMachadoGerardiDaSilva-VF.pdf)
