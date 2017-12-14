@@ -56,3 +56,9 @@ A aplicação foi desenvolvida para informar possíveis falhas mecânicas ou fur
 | Imagens / Streaming |
 | ------------- |
 | <img src="/docs/camera.png"> |
+
+# License
+GNU GPL v3.0
+
+
+Enjoy and drive safe!
