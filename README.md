@@ -57,7 +57,7 @@ The application has been developed to inform possible mechanical failure or thef
 | ------------- |
 | <img src="/docs/camera.png"> |
 
-# License
+## License
 GNU GPL v3.0
 
 
