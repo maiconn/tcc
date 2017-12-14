@@ -1,17 +1,18 @@
 # Aplicação Para Monitoramento Veicular Em Tempo Real
-- <a target="_blank" href="https://youtu.be/3hla2eGgnB4">Demo</a>
+- <a href="https://youtu.be/3hla2eGgnB4">Demo</a>
 - [Apresentação](/apresentação/tcc_bcc_2017_2_mmgsilva_MaiconMachadoGerardiDaSilva-AP.pdf)
 - [Monografia](https://github.com/maiconn/tcc/raw/master/monografia/VF%20-%20Ajustes%20Finais/tcc_bcc_2017_2_mmgsilva_MaiconMachadoGerardiDaSilva-VF.pdf)
 
-**O Que é?**
-
+### O Que é?
 Uma aplicação que abrange:
 - Um **software embarcado** em uma placa Raspberry Pi Zero W para coletar a posição geográfica, imagens de uma câmera e dados da porta OBD de um automóvel
 - Um **aplicativo mobile** para capturar as informações desse software embarcado.
 
-**Tags:** Vehicle monitoring. Internet of things. IOT. On-board Diagnostic. OBD. OBDII. OBD2. DTC. Diagnostic Trouble Code. Failure notification. Geographic Positioning System. GPS. Raspberry Pi. ELM327.
+### Origem 
+Trabalho de conclusão do curso de Ciência da Computação da Universidade Regional de Blumenau (FURB), com a orientação do prof. Miguel Alexandre Wisintainer.
 
-**Origem:** Trabalho de conclusão do curso de Ciência da Computação da Universidade Regional de Blumenau (FURB), com a orientação do prof. Miguel Alexandre Wisintainer.
+### Tags 
+Vehicle monitoring. Internet of things. IOT. On-board Diagnostic. OBD. OBDII. OBD2. DTC. Diagnostic Trouble Code. Failure notification. Geographic Positioning System. GPS. Raspberry Pi. ELM327.
 
 ## Introdução
 A aplicação foi desenvolvida para informar possíveis falhas mecânicas ou furtos no veículo. Ela possui como principais objetivos, visualizar a localização atual do automóvel, obter imagens e disponibilizar os dados de sua porta On-Board Diagnostic (OBD). Para isso, foi desenvolvido um software embarcado na placa Raspberry Pi Zero W utilizando como principais componentes um módulo Global Positioning System (GPS), um adaptador ELM327 Bluetooth e uma câmera. Para capturar os sensores e os códigos de erro do veículo, foi utilizada a biblioteca python-obd com o adaptador ELM327 Bluetooth. Também são enviadas notificações de e-mail e mensagens de texto caso ocorram falhas no automóvel. Os dados do software embarcado foram disponibilizados em um aplicativo móvel que utilizou a biblioteca Ionic para a sua construção.
