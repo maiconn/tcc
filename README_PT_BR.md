@@ -57,7 +57,7 @@ A aplicação foi desenvolvida para informar possíveis falhas mecânicas ou fur
 | ------------- |
 | <img src="/docs/camera.png"> |
 
-# Licença
+## Licença
 GNU GPL v3.0
 
 
